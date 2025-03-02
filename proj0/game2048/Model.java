@@ -109,7 +109,7 @@ public class Model extends Observable {
      *    and the trailing tile does not.
      * */
 
-    public boolean moveup(Side side) {
+    public boolean senak(Side side) {
         boolean flag = false;
         for (int col = 0; col < board.size(); col++) {
             boolean flag2[][] = new boolean[board.size()][board.size()];
@@ -134,28 +134,11 @@ public class Model extends Observable {
     //                         col 1   row  3
     public boolean tilemove(Side side) {
         boolean flag = false;
-        if (side == Side.NORTH) {
-            if (moveup(side)) {
-                flag = true;
-            }
-        } else {
-            for (int col = 0; col < board.size(); col++) {
-                for (int row = 0; row < board.size(); row++) {
-                    Tile t = board.tile(col, row);
-                    if (t == null) continue;
-                    if (side == Side.SOUTH) {
-                        board.move(col, 0, t);
-                        flag = true;
-                    } else if (side == Side.EAST) {
-                        board.move(3, row, t);
-                        flag = true;
-                    } else if (side == Side.WEST) {
-                        board.move(0, row, t);
-                        flag = true;
-                    }
-                }
-            }
-        }return flag;
+        board.setViewingPerspective(side);
+        if(senak(side)) {
+            flag = true;
+        }board.setViewingPerspective(Side.NORTH);
+        return flag;
     }
     public boolean tilt(Side side) {
         boolean changed;
