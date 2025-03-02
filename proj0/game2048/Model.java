@@ -109,6 +109,16 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
+        for (int col = 0; col < board.size(); col++) {
+            for (int row = 0; row < board.size(); row++) {
+                Tile t = board.tile(col, row);
+                if(board.tile(col,row)!=null) {
+                    board.move(col,3,t);
+                    changed = true;
+                    score+=7;
+                }
+            }
+        }
 
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
