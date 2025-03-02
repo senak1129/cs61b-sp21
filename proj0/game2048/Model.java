@@ -1,5 +1,7 @@
 package game2048;
 
+import com.sun.org.apache.bcel.internal.generic.SWAP;
+
 import java.util.Formatter;
 import java.util.Observable;
 
@@ -106,20 +108,58 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
-    public boolean tilt(Side side) {
-        boolean changed;
-        changed = false;
+
+    public boolean moveup(Side side) {
+        boolean flag = false;
+        for (int col = 0; col < board.size(); col++) {
+            boolean flag2 = true;
+            for (int row = board.size() - 1; row >= 0; row--) {
+                Tile t = board.tile(col, row);
+                if(t == null)continue;
+                int targetcol=col, targetrow=row;
+                while(targetrow + 1 < board.size() && board.tile(targetcol, targetrow + 1) == null) {
+                    targetrow++;
+                    flag=true;
+                }
+                if(targetrow + 1 <board.size()&&board.tile(targetcol,targetrow + 1)  != null && board.tile(targetcol, targetrow + 1).value() == board.tile(col, row).value()) {
+                    targetrow++;
+                    flag=true;
+                    score += board.tile(col, row).value() * 2;
+                }
+                board.move(targetcol,targetrow,t);
+            }
+        }return flag;
+    }
+    //                         col 1   row  3
+    public boolean tilemove(Side side) {
+        boolean flag = false;
         for (int col = 0; col < board.size(); col++) {
             for (int row = 0; row < board.size(); row++) {
                 Tile t = board.tile(col, row);
-                if(board.tile(col,row)!=null) {
-                    board.move(col,3,t);
-                    changed = true;
-                    score+=7;
+                if(t==null)continue;
+                if(side==Side.NORTH){
+                    if(moveup(side)){
+                        flag=true;
+                    }
+                }else if(side==Side.SOUTH){
+                    board.move(col,0,t);
+                    flag=true;
+                }else if(side==Side.EAST){
+                    board.move(3,row,t);
+                    flag=true;
+                }else if(side==Side.WEST){
+                    board.move(0,row,t);
+                    flag=true;
                 }
             }
+        }return flag;
+    }
+    public boolean tilt(Side side) {
+        boolean changed;
+        changed = false;
+        if (tilemove(side)) {
+            changed = true;
         }
-
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
