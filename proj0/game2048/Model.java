@@ -112,7 +112,7 @@ public class Model extends Observable {
     public boolean moveup(Side side) {
         boolean flag = false;
         for (int col = 0; col < board.size(); col++) {
-            boolean flag2 = true;
+            boolean flag2[][] = new boolean[board.size()][board.size()];
             for (int row = board.size() - 1; row >= 0; row--) {
                 Tile t = board.tile(col, row);
                 if(t == null)continue;
@@ -121,9 +121,10 @@ public class Model extends Observable {
                     targetrow++;
                     flag=true;
                 }
-                if(targetrow + 1 <board.size()&&board.tile(targetcol,targetrow + 1)  != null && board.tile(targetcol, targetrow + 1).value() == board.tile(col, row).value()) {
+                if(targetrow + 1 <board.size()&&board.tile(targetcol,targetrow + 1)  != null && flag2[targetcol][targetrow + 1] == false && board.tile(targetcol, targetrow + 1).value() == board.tile(col, row).value()) {
                     targetrow++;
                     flag=true;
+                    flag2[targetcol][targetrow] = true;
                     score += board.tile(col, row).value() * 2;
                 }
                 board.move(targetcol,targetrow,t);
@@ -133,23 +134,25 @@ public class Model extends Observable {
     //                         col 1   row  3
     public boolean tilemove(Side side) {
         boolean flag = false;
-        for (int col = 0; col < board.size(); col++) {
-            for (int row = 0; row < board.size(); row++) {
-                Tile t = board.tile(col, row);
-                if(t==null)continue;
-                if(side==Side.NORTH){
-                    if(moveup(side)){
-                        flag=true;
+        if (side == Side.NORTH) {
+            if (moveup(side)) {
+                flag = true;
+            }
+        } else {
+            for (int col = 0; col < board.size(); col++) {
+                for (int row = 0; row < board.size(); row++) {
+                    Tile t = board.tile(col, row);
+                    if (t == null) continue;
+                    if (side == Side.SOUTH) {
+                        board.move(col, 0, t);
+                        flag = true;
+                    } else if (side == Side.EAST) {
+                        board.move(3, row, t);
+                        flag = true;
+                    } else if (side == Side.WEST) {
+                        board.move(0, row, t);
+                        flag = true;
                     }
-                }else if(side==Side.SOUTH){
-                    board.move(col,0,t);
-                    flag=true;
-                }else if(side==Side.EAST){
-                    board.move(3,row,t);
-                    flag=true;
-                }else if(side==Side.WEST){
-                    board.move(0,row,t);
-                    flag=true;
                 }
             }
         }return flag;
