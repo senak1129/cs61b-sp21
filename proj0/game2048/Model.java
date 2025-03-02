@@ -118,8 +118,7 @@ public class Model extends Observable {
                 if(t == null)continue;
                 int targetcol=col, targetrow=row;
                 while(targetrow + 1 < board.size() && board.tile(targetcol, targetrow + 1) == null) {
-                    targetrow++;
-                    flag=true;
+                    targetrow++;flag=true;
                 }
                 if(targetrow + 1 <board.size()&&board.tile(targetcol,targetrow + 1)  != null && flag2[targetcol][targetrow + 1] == false && board.tile(targetcol, targetrow + 1).value() == board.tile(col, row).value()) {
                     targetrow++;
