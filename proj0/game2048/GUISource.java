@@ -35,16 +35,16 @@ class GUISource implements InputSource {
     public String getKey() {
         String command = _source.readKey();
         switch (command) {
-            case "W" :
+            case "向上箭头" :
                 command = "Up";
                 break;
-            case "D" :
+            case "向右箭头" :
                 command = "Right";
                 break;
-            case "S" :
+            case "向下箭头" :
                 command = "Down";
                 break;
-            case "A" :
+            case "向左箭头" :
                 command = "Left";
                 break;
             default :
