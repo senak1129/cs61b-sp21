@@ -90,11 +90,11 @@ public class LinkedListDeque<T> {
             current = current.next;
         }return current.item;
     }
-/*    public T getRecursive(int index){
+    public T getRecursive(int index){
         if(index < 0 || index >= size){
             return null;
-        }else if(index == 0){
+        }else if(index == 0) {
 
         }
-    }*/
+    }
 }
