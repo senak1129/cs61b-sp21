@@ -28,12 +28,10 @@ public class BuggyAList<Item> {
     private void resize(int capacity) {
         Item[] a = (Item[]) new Object[capacity];
         int len = 0;
-        if(capacity > size) {
-            len = size;
-        }else{
-            len = capacity;
+        if(capacity < size) {
+            size = capacity;
         }
-        for (int i = 0; i < len; i += 1) {
+        for (int i = 0; i < size; i += 1) {
             a[i] = items[i];
         }
         items = a;
