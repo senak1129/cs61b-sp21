@@ -47,13 +47,13 @@ public class TestBuggyAList {
       } else if (operationNumber == 1) {
         // size
         assertEquals(correct.size(), broken.size());
-      }/*else if(operationNumber == 2 && correct.size() > 0){
+      }else if(operationNumber == 2 && correct.size() > 0){
         //getlast
         assertEquals(correct.getLast(), broken.getLast());
       }else if(operationNumber == 3 && correct.size() > 0){
         //removelast
         assertEquals(correct.removeLast(), broken.removeLast());
-      }*/
+      }
     }
   }
 
