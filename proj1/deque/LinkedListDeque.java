@@ -1,11 +1,9 @@
 package deque;
 
-import java.util.Iterator;
-
 public class LinkedListDeque<T> {
     private Node sentinel;
     private int size;
-    class Node{
+    private class Node{
         public Node prev;
         public Node next;
         public T item;
@@ -57,6 +55,7 @@ public class LinkedListDeque<T> {
             System.out.print(current.item + " ");
             current = current.next;
         }
+        System.out.println();
     }
     public T removeFirst(){
         if(size == 0){
