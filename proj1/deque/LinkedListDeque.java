@@ -1,5 +1,7 @@
 package deque;
 
+import java.util.Iterator;
+
 public class LinkedListDeque<T> {
     private Node sentinel;
     private int size;
@@ -18,15 +20,6 @@ public class LinkedListDeque<T> {
         sentinel.next = sentinel;
         sentinel.prev = sentinel;
         size = 0;
-    }
-    public LinkedListDeque(LinkedListDeque<T> other){
-        sentinel = other.sentinel;
-        sentinel.next = sentinel;
-        sentinel.prev = sentinel;
-        size = other.size;
-        for(int i = 0; i < other.size; i++){
-            addLast(other.get(i));
-        }
     }
     public void addFirst(T item){
         Node newNode = new Node(item);
