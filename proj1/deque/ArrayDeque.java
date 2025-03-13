@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Comparator;
 
-public class ArrayDeque<T> implements Deque {
+public class ArrayDeque<T> implements Deque<T> {
 
     private int front;
     private int back;
@@ -48,10 +48,6 @@ public class ArrayDeque<T> implements Deque {
         ADeque[back] = item;
         size++;
         back = (back + 1) % capacity;
-    }
-
-    public boolean isEmpty() {
-        return size == 0;
     }
 
     public int size() {

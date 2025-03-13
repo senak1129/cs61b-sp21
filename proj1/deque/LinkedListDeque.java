@@ -1,6 +1,6 @@
 package deque;
 
-public class LinkedListDeque<T> implements Deque {
+public class LinkedListDeque<T> implements Deque<T> {
     private Node sentinel;
     private int size;
     private class Node{
@@ -42,9 +42,6 @@ public class LinkedListDeque<T> implements Deque {
         }
         sentinel.prev = newNode;
         size++;
-    }
-    public boolean isEmpty(){
-        return size == 0;
     }
     public int size(){
         return size;
