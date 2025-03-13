@@ -1,6 +1,8 @@
 package deque;
 
-public class ArrayDeque<T> {
+import java.util.Comparator;
+
+public class ArrayDeque<T> implements Deque {
 
     private int front;
     private int back;
@@ -56,15 +58,35 @@ public class ArrayDeque<T> {
         return size;
     }
 
+    public T Traversal(int flag, Comparator<T> c){
+        if(size == 0){
+            return null;
+        }
+        if(flag == 1){
+            for (int i = (front + 1) % capacity; i != back - 1; i = (i + 1) % capacity){
+                System.out.print(ADeque[i] + " ");
+            }
+            System.out.print(ADeque[back - 1]);
+            return null;
+        }else{
+            T mx = null;
+            for (int i = (front + 1) % capacity; i != back - 1; i = (i + 1) % capacity){
+                if(c.compare(mx,ADeque[i]) > 0){
+                    mx = ADeque[i];
+                }
+            }
+            if(c.compare(mx,ADeque[back - 1]) > 0){
+                mx = ADeque[back - 1];
+            }
+            return mx;
+        }
+    }
+
     public void printDeque() {
-        //nextFirst有可能指向最后一个位置
-        for (int i = (front + 1) % capacity; i != back - 1; i = (i + 1) % capacity)
-            System.out.print(ADeque[i] + " ");
-        System.out.print(ADeque[back - 1]);
+        Traversal(1,null);
     }
 
     public T removeFirst() {
-        //当数组的内容为空的时候，才无法进行remove操作，而不是取决于nextFirst的位置。
         if (size == 0){
             return null;
         }
