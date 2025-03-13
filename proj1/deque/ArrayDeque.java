@@ -1,6 +1,7 @@
 package deque;
 
 import java.util.Comparator;
+import java.util.Iterator;
 
 public class ArrayDeque<T> implements Deque<T> {
 
@@ -115,5 +116,13 @@ public class ArrayDeque<T> implements Deque<T> {
             return null;
         }
         return ADeque[(front + 1 + index) % capacity];
+    }
+
+    public Iterator<T> iterator(){
+        return null;
+    }
+
+    public boolean equals(Object o){
+        return false;
     }
 }
