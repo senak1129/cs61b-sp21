@@ -65,13 +65,13 @@ public class ArrayDeque<T> implements Deque<T> {
             System.out.print(ADeque[back - 1]);
             return null;
         }else{
-            T mx = null;
+            T mx = ADeque[0];
             for (int i = (front + 1) % capacity; i != back - 1; i = (i + 1) % capacity){
-                if(c.compare(mx,ADeque[i]) > 0){
+                if(c.compare(mx,ADeque[i]) < 0){
                     mx = ADeque[i];
                 }
             }
-            if(c.compare(mx,ADeque[back - 1]) > 0){
+            if(c.compare(mx,ADeque[back - 1]) < 0){
                 mx = ADeque[back - 1];
             }
             return mx;
