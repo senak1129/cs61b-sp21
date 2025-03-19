@@ -137,9 +137,9 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T> {
 
         @Override
         public T next() {
-           T item = ADeque[(front + 1 + siz) % capacity];
-           siz++;
-           return item;
+            T item = ADeque[(front + 1 + siz) % capacity];
+            siz++;
+            return item;
 
         }
     }
