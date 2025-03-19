@@ -3,7 +3,7 @@ package deque;
 import java.util.Comparator;
 import java.util.Iterator;
 
-public class ArrayDeque<T> implements Deque<T> {
+public class ArrayDeque<T> implements Deque<T>,Iterable<T> {
 
     private int front;
     private int back;
@@ -118,9 +118,32 @@ public class ArrayDeque<T> implements Deque<T> {
         return ADeque[(front + 1 + index) % capacity];
     }
 
+    @Override
     public Iterator<T> iterator(){
-        return null;
+        return new ArrayDequeIterator();
     }
+
+    private class ArrayDequeIterator implements Iterator<T>{
+        int siz;
+
+        public ArrayDequeIterator(){
+            siz = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return siz != size;
+        }
+
+        @Override
+        public T next() {
+           T item = ADeque[(front + 1 + siz) % capacity];
+           siz++;
+           return item;
+
+        }
+    }
+
 
     public boolean equals(Object o){
         return false;
