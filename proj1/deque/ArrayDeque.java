@@ -57,32 +57,12 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         return size;
     }
 
-    public T Traversal(int flag, Comparator<T> c) {
-        if (size == 0) {
-            return null;
-        }
-        if (flag == 1) {
-            for (int i = (front + 1) % capacity; i != back - 1; i = (i + 1) % capacity) {
-                System.out.print(ADeque[i] + " ");
-            }
-            System.out.print(ADeque[back - 1]);
-            return null;
-        } else {
-            T mx = ADeque[0];
-            for (int i = (front + 1) % capacity; i != back - 1; i = (i + 1) % capacity) {
-                if (c.compare(mx, ADeque[i]) < 0) {
-                    mx = ADeque[i];
-                }
-            }
-            if (c.compare(mx, ADeque[back - 1]) < 0) {
-                mx = ADeque[back - 1];
-            }
-            return mx;
-        }
-    }
 
     public void printDeque() {
-        Traversal(1, null);
+        for (int i = (front + 1) % capacity; i != back - 1; i = (i + 1) % capacity) {
+            System.out.print(ADeque[i] + " ");
+        }
+        System.out.print(ADeque[back - 1]);
     }
 
     public T removeFirst() {
