@@ -39,14 +39,6 @@ public class Main {
      * @param args arguments from the command line
      */
     public static void main(String[] args) {
-/*        args = new String[4];
-        args[0] = "dog";
-        args[1] = "fsj";
-        args[2] = "pig";
-        args[3] = "20";*/
-/*        args = new String[2];
-        args[0]="story";
-        args[1]="garbage";*/
         if (args.length == 0) {
             Utils.exitWithError("Must have at least one argument");
         }
