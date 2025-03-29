@@ -22,7 +22,7 @@ PACKAGE = capers
 # has a different name for this program (such as just "python"), run
 # the Makefile with
 #	make PYTHON=python check
-PYTHON = python3
+PYTHON = "C:/Users/senak/AppData/Local/Programs/Python/Python312/python.exe"
 
 # Flags to pass to tester.py.
 TESTER_FLAGS =
@@ -36,12 +36,10 @@ default:
 	$(RMAKE) -C $(PACKAGE) default
 
 check:
-	$(RMAKE) -C testing PYTHON=$(PYTHON) TESTER_FLAGS="$(TESTER_FLAGS)" check
+	cd testing && $(PYTHON) tester.py --progdir="C:/Users/senak/Desktop/cs61b/cs61b-sp21/lab6" --verbose our/*.in
 
 # 'make clean' will clean up stuff you can reconstruct.
 clean:
 	$(RM) *~
 	$(RMAKE) -C $(PACKAGE) clean
 	$(RMAKE) -C testing clean
-
-

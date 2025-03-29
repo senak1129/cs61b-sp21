@@ -1,6 +1,8 @@
 package capers;
 
+import java.util.Arrays;
 import java.io.File;
+import capers.CapersRepository;
 
 import static capers.Utils.*;
 
@@ -37,9 +39,18 @@ public class Main {
      * @param args arguments from the command line
      */
     public static void main(String[] args) {
+/*        args = new String[4];
+        args[0] = "dog";
+        args[1] = "fsj";
+        args[2] = "pig";
+        args[3] = "20";*/
+/*        args = new String[2];
+        args[0]="story";
+        args[1]="garbage";*/
         if (args.length == 0) {
             Utils.exitWithError("Must have at least one argument");
         }
+        //System.out.println("args: " + Arrays.toString(args));
 
         CapersRepository.setupPersistence();
         String text;
@@ -52,10 +63,16 @@ public class Main {
             break;
         case "dog":
             validateNumArgs("dog", args, 4);
+            String name = args[1];
+            String breed = args[2];
+            int age = Integer.parseInt(args[3]);
+            CapersRepository.makeDog(name, breed, age);
             // TODO: make a dog
             break;
         case "birthday":
             validateNumArgs("birthday", args, 2);
+            name = args[1];
+            CapersRepository.celebrateBirthday(name);
             // TODO: celebrate this dog's birthday
             break;
         default:
