@@ -11,12 +11,14 @@ public class Main {
      */
     public static void main(String[] args) {
         // TODO: what if args is empty?
-        if (args.length == 0) {
+/*        if (args.length == 0) {
             System.out.println("Must need a least one argument");
             return;
-        }
-      /*  args = new String[1];
-        args[0]="init";*/
+        }*/
+        //WriteContents(f,string)将string写入f
+        //WriteObject(f,object)把对象写入f
+        args = new String[1];
+        args[0]="init";
         String firstArg = args[0];
         switch(firstArg) {
             case "init":

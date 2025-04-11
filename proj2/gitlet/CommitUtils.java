@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 import java.util.Date;
 import static gitlet.Utils.*;
+import static gitlet.GitletConstants.*;
 
 
 public class CommitUtils {
@@ -21,8 +22,8 @@ public class CommitUtils {
 
     public static String saveCommit(Commit commit){
         String CommitID = getCommitId(commit);
-        File commitFile = join(Repository.COMMITS_DIR,CommitID);
-        writeContents(commitFile, commit);
+        File commitFile = join(COMMITS_DIR,CommitID);
+        writeObject(commitFile, commit);
         return CommitID;
     }
 
