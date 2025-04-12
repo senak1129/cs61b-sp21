@@ -67,19 +67,27 @@ public class Repository {
     }
 
     public static void add(String fileName){
+
+        //添加到暂存区 至少文件需要存在
         if(!join(CWD,fileName).exists()){
             System.out.println("File does not exist.");
         }
         else{
+            //如果indexMap存有这个文件名
+            //有两种情况 分别为文件修改过 和 没修改过
             if(indexMap.containsKey(fileName)){
+                //取得该文件名对应的SHA1
                 String targetSHA1 = indexMap.get(fileName);
+
+                //把文件作为字符串读取转换成sha1 如果没修改过那么一定是一样的
                 String targetSHA2 = sha1(readContentsAsString(join(CWD,fileName)));
                 if(targetSHA1.equals(targetSHA2)){
                     return;
                 }
             }
-            IndexUtils.saveIndex();
+            //保存index
             stageFile(fileName);
+            IndexUtils.saveIndex();
         }
     }
 
