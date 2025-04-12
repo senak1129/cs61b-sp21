@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import static gitlet.BranchUtils.*;
 import static gitlet.GitletConstants.*;
-
+import static gitlet.IndexUtils.*;
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -64,6 +64,23 @@ public class Repository {
         BranchUtils.saveCommitId(MASTER_BRANCH_NAME,initialCommitID);
 
         setHEAD(MASTER_BRANCH_NAME);
+    }
+
+    public static void add(String fileName){
+        if(!join(CWD,fileName).exists()){
+            System.out.println("File does not exist.");
+        }
+        else{
+            if(indexMap.containsKey(fileName)){
+                String targetSHA1 = indexMap.get(fileName);
+                String targetSHA2 = sha1(readContentsAsString(join(CWD,fileName)));
+                if(targetSHA1.equals(targetSHA2)){
+                    return;
+                }
+            }
+            IndexUtils.saveIndex();
+            stageFile(fileName);
+        }
     }
 
     public static void setHEAD(String branchName){
