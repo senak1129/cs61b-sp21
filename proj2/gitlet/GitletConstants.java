@@ -23,4 +23,6 @@ public class GitletConstants {
     public static final File INDEX_FILE = join(GITLET_DIR, "index");
 
     public static final File STAGED_FILE = join(GITLET_DIR, "stage_files");
+
+    public static final String MERGE_MODIFY_UNTRACKED_WARNING = "There is an untracked file in the way; delete it, or add and commit it first.";
 }

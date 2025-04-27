@@ -15,10 +15,6 @@ public class Main {
             System.out.println("Must need a least one argument");
             return;
         }
-        //WriteContents(f,string)将string写入f
-        //WriteObject(f,object)把对象写入f
-/*        args = new String[1];
-        args[0]="init";*/
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
@@ -38,6 +34,63 @@ public class Main {
                 Repository.add(args[1]);
                 break;
             // TODO: FILL THE REST IN
+            case "status":
+                if(args.length != 1){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.status();
+                break;
+            case "commit":
+                if(args.length != 2){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.commit(args[1]);
+                break;
+            case "rm":
+                if(args.length != 2){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.rm(args[1]);
+                break;
+            case "log":
+                if(args.length != 1){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.log();
+                break;
+            case "global-log":
+                if(args.length != 1){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.globalLog();
+            case "find":
+                if(args.length != 2){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.find(args[1]);
+                break;
+            case "checkout":
+                if(args.length <= 1 || args.length >= 5 ){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.checkout(args);
+                break;
+            case "branch":
+                if(args.length != 2){
+                    System.err.println("Incorrect operands.");
+                }
+                Repository.branch(args[1]);
+                break;
+            case "rm-branch":
+                if(args.length != 2){
+                    System.err.println("Incorrect operands.");
+                }
+                break;
+            case "merge":
+                break;
+            default:
+                System.out.println("No command with that name exists.");
+
         }
     }
 }
