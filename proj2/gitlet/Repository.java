@@ -254,8 +254,8 @@ public class Repository {
         //操作1
         //checkout -- [filename]
         //从上一个提交 把filename回到工作区
-        if(args[2].equals("-")&&args[3].equals("-")){
-            String fileName = args[4];
+        if(args[1].equals("-")&&args[2].equals("-")){
+            String fileName = args[3];
             //上一个提交
             Commit commit = CommitUtils.readCommit(getHeadCommitId());
             //此文件需要被上一个提交跟踪
