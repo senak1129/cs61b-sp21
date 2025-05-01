@@ -2,10 +2,9 @@ package gitlet;
 
 import java.io.File;
 import java.util.Date;
-import gitlet.Commit.*;
+import java.util.HashMap;
 
-import static gitlet.GitletContents.BRANCH_DIR;
-import static gitlet.GitletContents.COMMITS_DIR;
+import static gitlet.GitletContents.*;
 import static gitlet.Utils.*;
 import static gitlet.Utils.serialize;
 
@@ -40,7 +39,33 @@ public class CommitUtils {
         writeObject(commitFile, commit);
     }
 
+    public static void CreateFileObject(Commit LastCommit, Commit NowCommit){
+        HashMap<String,String>LastFileVersion = LastCommit.GetFileVersion();
+        HashMap<String,String>NowFileVersion = NowCommit.GetFileVersion();
+        for(String FileName : NowFileVersion.keySet()){
+            if(!LastFileVersion.containsKey(FileName)){
+                String FileSha1 = NowFileVersion.get(FileName);
+                String FileSha1Content = IndexUtils.StagedMap.get(FileSha1);
+                writeContents(join(OBJECTS_DIR,FileSha1), FileSha1Content);
+            }else if(!LastFileVersion.get(FileName).equals(NowFileVersion.get(FileName))){
+                String LastFileSha1 = LastFileVersion.get(FileName);
+                String NowFileSha1 = NowFileVersion.get(FileName);
+                String FileSha1Content = IndexUtils.StagedMap.get(NowFileSha1);
+                writeContents(join(OBJECTS_DIR,LastFileSha1), FileSha1Content);
+            }
+        }
+    }
+
+    public static Commit GetCommitByCommitId(String CommitId){
+        if(CommitId == null){
+            return null;
+        }
+        return readObject(join(COMMITS_DIR, CommitId), Commit.class);
+    }
+
     public static String GetCommitId(Commit commit){
         return sha1(serialize(commit));
     }
+
+
 }

@@ -2,6 +2,11 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
 import static gitlet.IndexUtils.*;
 import static gitlet.Utils.*;
 import static gitlet.CommitUtils.*;
@@ -10,17 +15,18 @@ public class Repository {
     public static String HEAD;
 
     static {
-        if(IsInitial()){
+        if (IsInitial()) {
             HEAD = readContentsAsString(HEAD_FILE);
         }
     }
 
-    public static boolean IsInitial(){
+    public static boolean IsInitial() {
         return GITLET_DIR.exists();
     }
-    public static void init(){
+
+    public static void init() {
         //如果gitlet文件夹存在
-        if(GITLET_DIR .exists()){
+        if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
             return;
         }
@@ -39,20 +45,20 @@ public class Repository {
         Commit EmptyCommit = MakeEmptyCommit("initial commit");
         SaveCommit(EmptyCommit);
         String CommitId = GetCommitId(EmptyCommit);
-        BranchUtils.SaveBranch("master",CommitId);
+        BranchUtils.SaveBranch("master", CommitId);
         BranchUtils.SetHEAD("master");
 
     }
 
-    public static void add(String FileName){
-        if(!join(CWD,FileName).exists()){
+    public static void add(String FileName) {
+        if (!join(CWD, FileName).exists()) {
             System.out.println("File does not exist.");
             return;
         }
         if (IndexMap.containsKey(FileName)) {
             String FileNameSha1 = IndexMap.get(FileName);
-            String FileNameSha2 = sha1(readContentsAsString(join(CWD,FileName)));
-            if(FileNameSha1.equals(FileNameSha2)){
+            String FileNameSha2 = sha1(readContentsAsString(join(CWD, FileName)));
+            if (FileNameSha1.equals(FileNameSha2)) {
                 return;
             }
         }
@@ -60,9 +66,213 @@ public class Repository {
         IndexUtils.SaveIndex();
     }
 
-    public static void commit(String CommitMessage){
+    public static void commit(String CommitMessage) {
+        if (CommitMessage.isEmpty()) {
+            System.out.println("Please enter a commit message.");
+            return;
+        }
+        String LastCommitId = CommitUtils.GetLastCommitId();
+        Commit LastCommit = CommitUtils.GetCommitByCommitId(LastCommitId);
+        HashMap<String, String> LastFileVersion = LastCommit.GetFileVersion();
 
+        if (IndexMap.equals(LastFileVersion)) {
+            System.out.println("No changes added to the commit.");
+            return;
+        }
+
+        Commit NowCommit = MakeCommit(CommitMessage);
+        SaveCommit(NowCommit);
+        Utils.writeObject(STAGED_FILE, StagedMap);
+        CommitUtils.CreateFileObject(LastCommit, NowCommit);
+        StagedMap.clear();
+        String NewCommitId = GetCommitId(NowCommit);
+        BranchUtils.SaveBranch(HEAD, NewCommitId);
     }
 
+    public static void rm(String FileName) {
+        boolean IsTrackedByLastCommit = IndexUtils.IsTrackedByCommit(FileName,GetLastCommit());
+        boolean IsStaged = IndexUtils.IsStaged(FileName,GetLastCommit());
+        if (!IsStaged && !IsTrackedByLastCommit) {
+            System.out.println("No reason to remove the file.");
+            return;
+        }
+        IndexUtils.UnStageFile(FileName);
+        IndexUtils.SaveIndex();
+        if (IsTrackedByLastCommit) {
+            restrictedDelete(join(CWD, FileName));
+        }
+    }
 
+    public static void log() {
+        Commit LastCommit = GetCommitByCommitId(GetLastCommitId());
+        while (LastCommit != null) {
+            System.out.println("===");
+            System.out.println("commit " + GetCommitId(LastCommit));
+            System.out.println("Date: " + LastCommit.GetDate().toString());
+            System.out.println(LastCommit.GetMessage());
+            System.out.println();
+            LastCommit = GetCommitByCommitId(LastCommit.GetFirstParentCommitId());
+        }
+    }
+
+    public static void globalLog() {
+        List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
+        if (commitIdList == null || commitIdList.isEmpty()) {
+            return;
+        }
+        for (String commitId : commitIdList) {
+            Commit commit = CommitUtils.GetCommitByCommitId(commitId);
+            System.out.println("===");
+            System.out.println("commit " + commitId);
+            System.out.println("Date: " + commit.GetDate().toString());
+            System.out.println(commit.GetMessage());
+            System.out.println();
+        }
+    }
+
+    public static void find(String message) {
+        List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
+        if (commitIdList == null || commitIdList.isEmpty()) {
+            return;
+        }
+        boolean found = false;
+        for (String commitId : commitIdList) {
+            Commit commit = CommitUtils.GetCommitByCommitId(commitId);
+            if(commit.GetMessage().equals(message)) {
+                System.out.println(commitId);
+                found = true;
+            }
+        }
+        if (!found) {
+            System.out.println("Found no commit with that message.");
+        }
+    }
+
+    public static String GetFileContent(Commit commit, String FileName) {
+        String FileSha1 = commit.GetFileVersion().get(FileName);
+        return readContentsAsString(join(CWD, FileSha1));
+    }
+
+    public static void checkout(String[] args) {
+        if(args.length == 3 && args[1].equals("--")) {
+            String FileName = args[2];
+            Commit LastCommit = GetCommitByCommitId(GetLastCommitId());
+            if(!LastCommit.GetFileVersion().containsKey(FileName)) {
+                System.out.println("File does not exist in that commit.");
+                return;
+            }
+            String content = GetFileContent(LastCommit, FileName);
+            Utils.writeContents(join(CWD,FileName), content);
+        }else if(args.length == 4 && args[2].equals("--")) {
+            String CommitId = args[1];
+            String FileName = args[3];
+            Commit commit = GetCommitByCommitId(CommitId);
+            if(commit == null) {
+                System.out.println("No commit with that id exists.");
+                return;
+            }
+            if (!commit.GetFileVersion().containsKey(FileName)) {
+                System.out.println("File does not exist in that commit.");
+                return;
+            }
+            String content = GetFileContent(commit, FileName);
+            Utils.writeContents(join(CWD,FileName), content);
+        }else if(args.length == 2){
+            String BranchName = args[1];
+            if(BranchName.equals(HEAD)){
+                System.out.println("No need to checkout the current branch.");
+                return;
+            }else {
+                List<String>BranchList = GetAllBranches();
+                if(!BranchList.contains(BranchName)) {
+                    System.out.println("No such branch exists.");
+                    return;
+                }else{
+                    List<String> CWDFileNames = plainFilenamesIn(CWD);
+                    assert CWDFileNames != null;
+                    for(String FileName:CWDFileNames) {
+                        if(!IndexUtils.IsTrackedByCommit(FileName, GetLastCommit())) {
+                            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                            return;
+                        }
+                    }
+                    //将目标commit的文件写入工作目录(覆盖)
+                    Commit TargetCommit = GetBranchLastCommit(BranchName);
+                    for(String FileName : TargetCommit.GetFileVersion().keySet()) {
+                        String Contents = GetFileContent(TargetCommit, FileName);
+                        Utils.writeContents(join(CWD,FileName), Contents);
+                    }
+
+                    //删除当前分支有但目标分支没有的文件
+                    for(String FileName : GetLastCommit().GetFileVersion().keySet()) {
+                        if(!TargetCommit.GetFileVersion().containsKey(FileName)) {
+                            restrictedDelete(join(CWD,FileName));
+                        }
+                    }
+                    IndexMap = new HashMap<>(TargetCommit.GetFileVersion());
+                    StagedMap.clear();
+                    IndexUtils.SaveIndex();
+                    BranchUtils.SetHEAD(BranchName);
+
+                }
+            }
+        }
+    }
+
+    public static Commit GetBranchLastCommit(String BranchName) {
+        String CommitId = readContentsAsString(join(BRANCH_DIR,BranchName));
+        return CommitUtils.GetCommitByCommitId(CommitId);
+    }
+
+    public static Commit GetLastCommit() {
+        return CommitUtils.GetCommitByCommitId(GetLastCommitId());
+    }
+
+    public static void status(){
+        System.out.println("=== Branch ===");
+        List<String> BranchList = GetAllBranches();
+        BranchList.forEach(System.out::println);
+        System.out.println();
+
+        System.out.println("=== Staged Files ===");
+        List<String> StagedFile = GetStagedFiles(GetLastCommit());
+        StagedFile.forEach(System.out::println);
+        System.out.println();
+
+        System.out.println("=== Removed Files ===");
+        List<String> RemovedFile = GetRemovedFiles(GetLastCommit());
+        RemovedFile.forEach(System.out::println);
+        System.out.println();
+    }
+
+    public static List<String> GetAllBranches() {
+        List<String> BranchList = plainFilenamesIn(BRANCH_DIR);
+        return BranchList;
+    }
+
+    public static List<String> GetStagedFiles(Commit commit) {
+        List<String> stagedFiles = new LinkedList<>();
+        HashMap<String,String> fileverison = commit.GetFileVersion();
+        for(String FileName : IndexMap.keySet()) {
+            if(!fileverison.containsKey(FileName)) {
+                stagedFiles.add(FileName);//新加
+            }else{
+                String ContentSha1 = fileverison.get(FileName);
+                if (!IndexMap.get(FileName).equals(ContentSha1)) {
+                    stagedFiles.add(FileName);
+                }
+            }
+        }return stagedFiles;
+    }
+
+    public static List<String> GetRemovedFiles(Commit commit) {
+        List<String> RemovedFiles = new LinkedList<>();
+        HashMap<String,String> fileverison = commit.GetFileVersion();
+        for(String FileName : fileverison.keySet()) {
+            if(!IndexMap.containsKey(FileName)) {
+                RemovedFiles.add(FileName);
+            }
+        }
+        return RemovedFiles;
+    }
 }

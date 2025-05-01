@@ -21,4 +21,5 @@ public class GitletContents {
     public static final File INDEX_FILE = join(GITLET_DIR, "index");
 
     public static final File HEAD_FILE = join(GITLET_DIR, "HEAD");
+
 }

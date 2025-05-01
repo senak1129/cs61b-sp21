@@ -41,7 +41,6 @@ public class Commit implements Serializable {
         this.FileVersion = FileVersion;
     }
 
-
     public String GetMessage(){
         return this.message;
     }
@@ -61,5 +60,7 @@ public class Commit implements Serializable {
     public HashMap<String,String> GetFileVersion(){
         return this.FileVersion;
     }
+
+
 
 }

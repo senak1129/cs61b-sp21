@@ -18,9 +18,26 @@ public class Main {
             case "add":
                 Repository.add(args[1]);
                 break;
-                case "commit":
-                    Repository.commit(args[1]);
-                    break;
+            case "commit":
+                Repository.commit(args[1]);
+                break;
+            case "rm":
+                Repository.rm(args[1]);
+                break;
+            case "log":
+                Repository.log();
+                break;
+            case "global-log":
+                Repository.globalLog();
+                break;
+            case "find":
+                Repository.find(args[1]);
+                break;
+            case "status":
+                Repository.status();
+                break;
+            case "checkout":
+                break;
         }
     }
 }
