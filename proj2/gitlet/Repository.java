@@ -2,10 +2,8 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static gitlet.IndexUtils.*;
 import static gitlet.Utils.*;
@@ -106,9 +104,11 @@ public class Repository {
     public static void log() {
         Commit LastCommit = GetCommitByCommitId(GetLastCommitId());
         while (LastCommit != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
             System.out.println("===");
             System.out.println("commit " + GetCommitId(LastCommit));
-            System.out.println("Date: " + LastCommit.GetDate().toString());
+            System.out.println("Date: " + sdf.format(LastCommit.GetDate()));
             System.out.println(LastCommit.GetMessage());
             System.out.println();
             LastCommit = GetCommitByCommitId(LastCommit.GetFirstParentCommitId());
@@ -150,7 +150,7 @@ public class Repository {
 
     public static String GetFileContent(Commit commit, String FileName) {
         String FileSha1 = commit.GetFileVersion().get(FileName);
-        return readContentsAsString(join(CWD, FileSha1));
+        return readContentsAsString(join(OBJECTS_DIR, FileSha1));
     }
 
     public static void checkout(String[] args) {

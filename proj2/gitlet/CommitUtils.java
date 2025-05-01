@@ -51,7 +51,7 @@ public class CommitUtils {
                 String LastFileSha1 = LastFileVersion.get(FileName);
                 String NowFileSha1 = NowFileVersion.get(FileName);
                 String FileSha1Content = IndexUtils.StagedMap.get(NowFileSha1);
-                writeContents(join(OBJECTS_DIR,LastFileSha1), FileSha1Content);
+                writeContents(join(OBJECTS_DIR,NowFileSha1), FileSha1Content);
             }
         }
     }
