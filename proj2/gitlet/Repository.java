@@ -238,7 +238,13 @@ public class Repository {
     public static void status(){
         System.out.println("=== Branch ===");
         List<String> BranchList = GetAllBranches();
-        BranchList.forEach(System.out::println);
+        for(String BranchName:BranchList) {
+            if(BranchName.equals(HEAD)) {
+                System.out.println("*"+BranchName);
+            }else{
+                System.out.println(BranchName);
+            }
+        }
         System.out.println();
 
         System.out.println("=== Staged Files ===");
@@ -249,6 +255,12 @@ public class Repository {
         System.out.println("=== Removed Files ===");
         List<String> RemovedFile = GetRemovedFiles(GetLastCommit());
         RemovedFile.forEach(System.out::println);
+        System.out.println();
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        System.out.println();
+
+        System.out.println("=== Untracked Files ===");
         System.out.println();
     }
 
