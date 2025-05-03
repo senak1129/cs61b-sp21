@@ -67,8 +67,7 @@ public class CommitUtils {
         try {
             return readObject(commitFile, Commit.class);
         } catch (IllegalArgumentException e) {
-            return null;
-        }
+            return null;}
     }
 
     public static String GetCommitId(Commit commit){

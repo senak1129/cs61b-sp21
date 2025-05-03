@@ -169,7 +169,7 @@ public class Repository {
             //checkout [commitId] -- [filename]
             String CommitId = args[1];
             String FileName = args[3];
-            Commit commit = GetCommitByCommitId(CommitId);
+            Commit commit = GetCommitByCommitIdPrefix(CommitId);
             if(commit == null) {
                 System.out.println("No commit with that id exists.");
                 return;
@@ -208,6 +208,24 @@ public class Repository {
         }
     }
 
+    public static Commit GetCommitByCommitIdPrefix(String commitIdPrefix) {
+        List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
+        if (commitIdList == null) {
+            return null;
+        }
+        int queryCount = 0;
+        String resultCommitId = null;
+        for (String commitId : commitIdList) {
+            if (commitId.startsWith(commitIdPrefix)) {
+                queryCount++;
+                resultCommitId = commitId;
+            }
+        }
+        if (queryCount > 1) {
+            throw new RuntimeException("this prefix is ambiguous, you must use longer prefix");
+        }
+        return GetCommitByCommitId(resultCommitId);
+    }
 
     public static void RestoreCommit(Commit TargetCommit) {
         FileUtils.RestoreCommitFile(TargetCommit);
@@ -300,7 +318,7 @@ public class Repository {
     }
 
     public static void Reset(String CommitId) {
-        Commit commit = GetCommitByCommitId(CommitId);
+        Commit commit = GetCommitByCommitIdPrefix(CommitId);
         if(commit == null) {
             System.out.println("No commit with that id exists.");
             return;
