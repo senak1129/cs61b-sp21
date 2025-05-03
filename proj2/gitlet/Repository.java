@@ -209,7 +209,6 @@ public class Repository {
     }
 
 
-
     public static void RestoreCommit(Commit TargetCommit) {
         FileUtils.RestoreCommitFile(TargetCommit);
         IndexMap = new HashMap<>(TargetCommit.GetFileVersion());
