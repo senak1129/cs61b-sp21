@@ -100,8 +100,4 @@ public class Main {
                 break;
         }
     }
-
-    public static boolean Ck(){
-
-    }
 }
