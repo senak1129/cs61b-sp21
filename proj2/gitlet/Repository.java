@@ -121,13 +121,11 @@ public class Repository {
         }
         for (String commitId : commitIdList) {
             Commit commit = CommitUtils.GetCommitByCommitId(commitId);
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
             System.out.println("===");
             System.out.println("commit " + commitId);
-
-            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.US);
-            String datestr = sdf.format(commit.GetDate());
-            System.out.println("Date: " + datestr);
-
+            System.out.println("Date: " + sdf.format(commit.GetDate()));
             System.out.println(commit.GetMessage());
             System.out.println();
         }
@@ -157,6 +155,7 @@ public class Repository {
     }
 
     public static void checkout(String[] args) {
+        //checkout -- [filename]
         if(args.length == 3 && args[1].equals("--")) {
             String FileName = args[2];
             Commit LastCommit = GetCommitByCommitId(GetLastCommitId());
@@ -167,6 +166,7 @@ public class Repository {
             String content = GetFileContent(LastCommit, FileName);
             Utils.writeContents(join(CWD,FileName), content);
         }else if(args.length == 4 && args[2].equals("--")) {
+            //checkout [commitId] -- [filename]
             String CommitId = args[1];
             String FileName = args[3];
             Commit commit = GetCommitByCommitId(CommitId);
@@ -203,6 +203,8 @@ public class Repository {
                     BranchUtils.SetHEAD(BranchName);
                 }
             }
+        }else{
+            System.out.println("Incorrect operands.");
         }
     }
 
@@ -287,8 +289,8 @@ public class Repository {
 
     public static void RemoveBranch(String BranchName) {
         List<String> BranchList = GetAllBranches();
-        if(BranchList.contains(BranchName)) {
-            System.out.println("A branch with that name already exists.");
+        if(!BranchList.contains(BranchName)) {
+            System.out.println("A branch with that name does not exist.");
             return;
         }
         if(BranchName.equals(HEAD)) {
