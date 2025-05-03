@@ -56,11 +56,19 @@ public class CommitUtils {
         }
     }
 
-    public static Commit GetCommitByCommitId(String CommitId){
-        if(CommitId == null){
+    public static Commit GetCommitByCommitId(String commitId) {
+        if (commitId == null) {
             return null;
         }
-        return readObject(join(COMMITS_DIR, CommitId), Commit.class);
+        File commitFile = join(COMMITS_DIR, commitId);
+        if (!commitFile.exists()) {
+            return null;
+        }
+        try {
+            return readObject(commitFile, Commit.class);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     public static String GetCommitId(Commit commit){

@@ -123,7 +123,11 @@ public class Repository {
             Commit commit = CommitUtils.GetCommitByCommitId(commitId);
             System.out.println("===");
             System.out.println("commit " + commitId);
-            System.out.println("Date: " + commit.GetDate().toString());
+
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.US);
+            String datestr = sdf.format(commit.GetDate());
+            System.out.println("Date: " + datestr);
+
             System.out.println(commit.GetMessage());
             System.out.println();
         }
@@ -195,21 +199,6 @@ public class Repository {
                             return;
                         }
                     }
-
-/*                    //将目标commit的文件写入工作目录(覆盖)
-                    Commit TargetCommit = GetBranchLastCommit(BranchName);
-                    for(String FileName : TargetCommit.GetFileVersion().keySet()) {
-                        String Contents = GetFileContent(TargetCommit, FileName);
-                        Utils.writeContents(join(CWD,FileName), Contents);
-                    }
-
-                    //删除当前分支有但目标分支没有的文件
-                    for(String FileName : GetLastCommit().GetFileVersion().keySet()) {
-                        if(!TargetCommit.GetFileVersion().containsKey(FileName)) {
-                            restrictedDelete(join(CWD,FileName));
-                        }
-                    }*/
-
                     RestoreCommit(GetBranchLastCommit(BranchName));
                     BranchUtils.SetHEAD(BranchName);
                 }
@@ -236,7 +225,7 @@ public class Repository {
     }
 
     public static void status(){
-        System.out.println("=== Branch ===");
+        System.out.println("=== Branches ===");
         List<String> BranchList = GetAllBranches();
         for(String BranchName:BranchList) {
             if(BranchName.equals(HEAD)) {
@@ -266,6 +255,7 @@ public class Repository {
 
     public static List<String> GetAllBranches() {
         List<String> BranchList = plainFilenamesIn(BRANCH_DIR);
+        BranchList.sort(String::compareTo);
         return BranchList;
     }
 
@@ -281,7 +271,9 @@ public class Repository {
                     stagedFiles.add(FileName);
                 }
             }
-        }return stagedFiles;
+        }
+        stagedFiles.sort(String::compareTo);
+        return stagedFiles;
     }
 
     public static void MakeNewBranch(String BranchName) {
@@ -324,6 +316,7 @@ public class Repository {
                 RemovedFiles.add(FileName);
             }
         }
+        RemovedFiles.sort(String::compareTo);
         return RemovedFiles;
     }
 }
