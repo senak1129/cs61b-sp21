@@ -3,7 +3,7 @@ import static gitlet.Utils.*;
 import static gitlet.GitletContents.*;
 public class BranchUtils {
 
-    public static void SaveBranch(String BranchName, String CommitId) {
+    public static void SaveBranchCommit(String BranchName, String CommitId) {
         writeContents(join(BRANCH_DIR, BranchName), CommitId);
     }
 

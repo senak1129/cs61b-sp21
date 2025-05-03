@@ -1,6 +1,5 @@
 package gitlet;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -43,7 +42,7 @@ public class Repository {
         Commit EmptyCommit = MakeEmptyCommit("initial commit");
         SaveCommit(EmptyCommit);
         String CommitId = GetCommitId(EmptyCommit);
-        BranchUtils.SaveBranch("master", CommitId);
+        BranchUtils.SaveBranchCommit("master", CommitId);
         BranchUtils.SetHEAD("master");
 
     }
@@ -84,7 +83,7 @@ public class Repository {
         CommitUtils.CreateFileObject(LastCommit, NowCommit);
         StagedMap.clear();
         String NewCommitId = GetCommitId(NowCommit);
-        BranchUtils.SaveBranch(HEAD, NewCommitId);
+        BranchUtils.SaveBranchCommit(HEAD, NewCommitId);
     }
 
     public static void rm(String FileName) {
@@ -196,7 +195,8 @@ public class Repository {
                             return;
                         }
                     }
-                    //将目标commit的文件写入工作目录(覆盖)
+
+/*                    //将目标commit的文件写入工作目录(覆盖)
                     Commit TargetCommit = GetBranchLastCommit(BranchName);
                     for(String FileName : TargetCommit.GetFileVersion().keySet()) {
                         String Contents = GetFileContent(TargetCommit, FileName);
@@ -208,15 +208,22 @@ public class Repository {
                         if(!TargetCommit.GetFileVersion().containsKey(FileName)) {
                             restrictedDelete(join(CWD,FileName));
                         }
-                    }
-                    IndexMap = new HashMap<>(TargetCommit.GetFileVersion());
-                    StagedMap.clear();
-                    IndexUtils.SaveIndex();
-                    BranchUtils.SetHEAD(BranchName);
+                    }*/
 
+                    RestoreCommit(GetBranchLastCommit(BranchName));
+                    BranchUtils.SetHEAD(BranchName);
                 }
             }
         }
+    }
+
+
+
+    public static void RestoreCommit(Commit TargetCommit) {
+        FileUtils.RestoreCommitFile(TargetCommit);
+        IndexMap = new HashMap<>(TargetCommit.GetFileVersion());
+        StagedMap.clear();
+        IndexUtils.SaveIndex();
     }
 
     public static Commit GetBranchLastCommit(String BranchName) {
@@ -263,6 +270,38 @@ public class Repository {
                 }
             }
         }return stagedFiles;
+    }
+
+    public static void MakeNewBranch(String BranchName) {
+        List<String> BranchList = GetAllBranches();
+        if(BranchList.contains(BranchName)) {
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        writeContents(join(BRANCH_DIR,BranchName),GetLastCommitId());
+    }
+
+    public static void RemoveBranch(String BranchName) {
+        List<String> BranchList = GetAllBranches();
+        if(BranchList.contains(BranchName)) {
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        if(BranchName.equals(HEAD)) {
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+        join(BRANCH_DIR,BranchName).delete();
+    }
+
+    public static void Reset(String CommitId) {
+        Commit commit = GetCommitByCommitId(CommitId);
+        if(commit == null) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+        RestoreCommit(commit);
+        BranchUtils.SaveBranchCommit(HEAD,CommitId);
     }
 
     public static List<String> GetRemovedFiles(Commit commit) {

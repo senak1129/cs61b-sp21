@@ -39,6 +39,15 @@ public class Main {
             case "checkout":
                 Repository.checkout(args);
                 break;
+            case "branch":
+                Repository.MakeNewBranch(args[1]);
+                break;
+            case "rm-branch":
+                Repository.rm(args[1]);
+                break;
+            case "reset":
+                Repository.Reset(args[1]);
+                break;
         }
     }
 }
