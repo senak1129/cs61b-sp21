@@ -101,6 +101,7 @@ public class Main {
                     return;
                 }
                 Repository.merge(args[1]);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 break;
