@@ -208,6 +208,16 @@ public class Repository {
         }
     }
 
+    public static void ckout(Commit commit, String fileName) {
+        if(!IsTrackedByCommit(fileName, commit)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        String fileSHA1 = commit.GetFileVersion().get(fileName);
+        String fileConent = GetFileContent(commit, fileName);
+        writeContents(join(CWD,fileName), fileSHA1);
+    }
+
     public static Commit GetCommitByCommitIdPrefix(String commitIdPrefix) {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
         if (commitIdList == null) {
@@ -381,15 +391,70 @@ public class Repository {
             return; //给定分支已经完全被包含在当前分支里
         }
 
+        //           master     other
+        //commit1 <- commit2 <- commit3
+        //此时让master文件等于commit3的id checkout commit3即可
         if (CommitUtils.isSameCommit(lastCommit, splitCommit)) {
             String savedHEAD = HEAD;
-            checkout(branchName); // checkout branch, note it will change head --> another branch
+            checkout(branchName);
             HEAD = savedHEAD;
             // fast-forward master pointer
             BranchUtils.SaveBranchCommit(HEAD,BranchUtils.gerBranchCommitId(branchName));
             System.out.println("Current branch fast-forwarded.");
             return;
         }
+        Set<String> splitPointFiles = splitCommit.GetFileVersion().keySet();
+        Set<String> lastCommitFiles = lastCommit.GetFileVersion().keySet();
+        Set<String> branchCommitFiles = branchCommit.GetFileVersion().keySet();
+
+        Set<String>allFiles = new HashSet<>();
+        allFiles.addAll(splitPointFiles);
+        allFiles.addAll(lastCommitFiles);
+        allFiles.addAll(branchCommitFiles);
+
+        boolean isConflict = false;
+        for(String fileName : allFiles) {
+            boolean splitCurrentConsistent = isConsistent(fileName,splitCommit,lastCommit);
+            boolean splitBranchConsistent = isConsistent(fileName,splitCommit,branchCommit);
+            boolean branchCurrentConsistent = isConsistent(fileName,lastCommit,branchCommit);
+
+            //merge no conflicts
+            if((splitBranchConsistent && ! splitCurrentConsistent) || branchCurrentConsistent) {
+                continue;
+            }
+
+            if(!splitBranchConsistent && splitCurrentConsistent) {
+                if(!branchCommitFiles.contains(fileName)) {
+                    if(FileUtils.isOverwritingOrDeletingCWDUntracked(fileName,lastCommit)){
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        return;
+                    }else{
+                        rm(fileName);
+                    }
+                }else{
+                    if(FileUtils.isOverwritingOrDeletingCWDUntracked(fileName,lastCommit)){
+                        System.out.println("There is an untracked file in the way; delete it first.");
+                        return;
+                    }else{
+                        ckout(branchCommit,fileName);
+                        add(fileName);
+                    }
+                }
+                continue;
+            }
+        }
+
+        commit("Merged " + branchName + "into " + HEAD + ".");
+        Commit mergeCommit = GetLastCommit();
+        mergeCommit.SetSecondParentCommitId(BranchUtils.gerBranchCommitId(branchName));
+        SaveCommit(mergeCommit);
+
+        BranchUtils.SaveBranchCommit(HEAD,GetCommitId(mergeCommit));
+        if(isConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
 
     }
+
+
 }

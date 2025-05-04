@@ -29,6 +29,10 @@ public class BranchUtils {
         }
     }
 
+    public static void saveCommitId(String branchName, String CommitId) {
+        Utils.writeContents(join(BRANCH_DIR, branchName), CommitId);
+    }
+
     public static String gerBranchCommitId(String BranchName){
         File F = join(BRANCH_DIR, BranchName);
         if(F.exists()){

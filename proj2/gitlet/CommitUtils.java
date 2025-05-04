@@ -122,5 +122,24 @@ public class CommitUtils {
         return sha1(serialize(commit));
     }
 
+    public static boolean isConsistent(String fileName,Commit commit1,Commit commit2){
+        assert fileName != null && commit1 != null && commit2 != null;
+        HashMap<String,String>fileVersion1 = commit1.GetFileVersion();
+        HashMap<String,String>fileVersion2 = commit2.GetFileVersion();
+        boolean existInCommit1 = fileVersion1.containsKey(fileName);
+        boolean existInCommit2 = fileVersion2.containsKey(fileName);
+        if(!existInCommit1 && !existInCommit2) return true;
+        if(!existInCommit1 || !existInCommit2) return false;
+        Boolean sameContent = hasSameFileVersion(fileName,commit1,commit2);
+        assert sameContent != null;
+        return sameContent;
+    }
 
+    public static Boolean hasSameFileVersion(String fileName,Commit commit1,Commit commit2){
+        assert fileName != null && commit1 != null && commit2 != null;
+        HashMap<String,String>fileVersion1 = commit1.GetFileVersion();
+        HashMap<String,String>fileVersion2 = commit2.GetFileVersion();
+        if(!fileVersion1.containsKey(fileName) || !fileVersion2.containsKey(fileName)) return null;
+        return fileVersion1.get(fileName).equals(fileVersion2.get(fileName));
+    }
 }
