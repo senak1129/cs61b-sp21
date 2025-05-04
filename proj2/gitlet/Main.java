@@ -95,6 +95,12 @@ public class Main {
                 }
                 Repository.Reset(args[1]);
                 break;
+            case "merge":
+                if(!Repository.IsInitial()){
+                    System.out.println("Not in an initialized Gitlet directory.");
+                    return;
+                }
+                Repository.merge(args[1]);
             default:
                 System.out.println("No command with that name exists.");
                 break;

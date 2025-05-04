@@ -154,7 +154,7 @@ public class Repository {
         return readContentsAsString(join(OBJECTS_DIR, FileSha1));
     }
 
-    public static void checkout(String[] args) {
+    public static void checkout(String...args) {
         //checkout -- [filename]
         if(args.length == 3 && args[1].equals("--")) {
             String FileName = args[2];
@@ -337,5 +337,43 @@ public class Repository {
         }
         RemovedFiles.sort(String::compareTo);
         return RemovedFiles;
+    }
+
+    public static void merge(String branchName) {
+        if(!BranchUtils.branchExists(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+
+        if(HEAD.equals(branchName)) {
+            System.out.println("Cannot merge the current branch.");
+            return;
+        }
+
+        Commit lastCommit = GetLastCommit();
+        List<String> stagedFileNames = GetStagedFiles(lastCommit);
+        List<String> removedFileNames = GetRemovedFiles(lastCommit);
+        if (!stagedFileNames.isEmpty() || !removedFileNames.isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+
+        Commit branchCommit = BranchUtils.getBranchCommit(branchName);
+        Commit splitCommit = CommitUtils.findSplitPoint(HEAD, branchName);
+        if (splitCommit == null || CommitUtils.isSameCommit(branchCommit, splitCommit)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return; //给定分支已经完全被包含在当前分支里
+        }
+
+        if (CommitUtils.isSameCommit(lastCommit, splitCommit)) {
+            String savedHEAD = HEAD;
+            checkout(branchName); // checkout branch, note it will change head --> another branch
+            HEAD = savedHEAD;
+            // fast-forward master pointer
+            BranchUtils.SaveBranchCommit(HEAD,BranchUtils.gerBranchCommitId(branchName));
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+
     }
 }

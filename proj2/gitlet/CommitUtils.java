@@ -1,8 +1,7 @@
 package gitlet;
 
 import java.io.File;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 import static gitlet.GitletContents.*;
 import static gitlet.Utils.*;
@@ -68,6 +67,55 @@ public class CommitUtils {
             return readObject(commitFile, Commit.class);
         } catch (IllegalArgumentException e) {
             return null;}
+    }
+
+    public static Commit findSplitPoint(String b1, String b2) {
+        Commit head1 = BranchUtils.getBranchLastCommit(b1);
+        Commit head2 = BranchUtils.getBranchLastCommit(b2);
+
+        // 1. 收集 b1 所有祖先
+        Set<String> seen = new HashSet<>();
+        Deque<Commit> stack = new ArrayDeque<>();
+        stack.push(head1);
+        while (!stack.isEmpty()) {
+            Commit cur = stack.pop();
+            if (cur == null) continue;
+            String id = GetCommitId(cur);       // 你的提交 ID 方法
+            if (!seen.add(id)) continue;                  // 已访问过就跳过
+
+            // 把所有父提交都压栈
+            String p1 = cur.GetFirstParentCommitId();
+            String p2 = cur.GetSecondParentCommitId();   // 可能为 null
+            if (p1 != null) stack.push(Repository.GetCommitByCommitIdPrefix(p1));
+            if (p2 != null) stack.push(Repository.GetCommitByCommitIdPrefix(p2));
+        }
+
+        // 2. 从 b2 做 BFS，首个命中的就是最近的公共祖先
+        Deque<Commit> queue = new ArrayDeque<>();
+        Set<String> visited2 = new HashSet<>();
+        queue.add(head2);
+        while (!queue.isEmpty()) {
+            Commit cur = queue.poll();
+            if (cur == null) continue;
+            String id = GetCommitId(cur);
+            if (!visited2.add(id)) continue;
+
+            if (seen.contains(id)) {
+                return cur;  // 找到 split point
+            }
+
+            String p1 = cur.GetFirstParentCommitId();
+            String p2 = cur.GetSecondParentCommitId();
+            if (p1 != null) queue.add(Repository.GetCommitByCommitIdPrefix(p1));
+            if (p2 != null) queue.add(Repository.GetCommitByCommitIdPrefix(p2));
+        }
+
+        throw new RuntimeException("找不到共同祖先！");
+    }
+
+    public static boolean isSameCommit(Commit commit1, Commit commit2) {
+        if(commit1 == null || commit2 == null) return false;
+        return GetCommitId(commit1).equals(GetCommitId(commit2));
     }
 
     public static String GetCommitId(Commit commit){
