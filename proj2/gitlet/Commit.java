@@ -10,57 +10,54 @@ public class Commit implements Serializable {
 
     private Date date;
 
-    private String FirstParentCommitId;
+    private String firstParentCommitId;
 
-    private String SecondParentCommitId;
+    private String secondParentCommitId;
 
-    private HashMap<String,String>FileVersion;
+    private HashMap<String,String> fileVersion;
 
 
     public Commit(){
-        FileVersion = new HashMap<>();
+        fileVersion = new HashMap<>();
     }
 
-    public void SetMessage(String message){
+    public void setMessage(String message){
         this.message = message;
     }
 
-    public void SetDate(Date date){
+    public void setDate(Date date){
         this.date = date;
     }
 
-    public void SetFirstParentCommitId(String FirstParentCommitId){
-        this.FirstParentCommitId = FirstParentCommitId;
+    public void setFirstParentCommitId(String firstParentCommitId){
+        this.firstParentCommitId = firstParentCommitId;
     }
 
-    public void SetSecondParentCommitId(String SecondParentCommitId){
-        this.SecondParentCommitId = SecondParentCommitId;
+    public void setSecondParentCommitId(String secondParentCommitId){
+        this.secondParentCommitId = secondParentCommitId;
     }
 
-    public void SetFileVersion(HashMap<String,String> FileVersion){
-        this.FileVersion = FileVersion;
+    public void setFileVersion(HashMap<String,String> fileVersion){
+        this.fileVersion = fileVersion;
     }
 
-    public String GetMessage(){
+    public String getMessage(){
         return this.message;
     }
 
-    public Date GetDate(){
+    public Date getDate(){
         return this.date;
     }
 
-    public String GetFirstParentCommitId(){
-        return this.FirstParentCommitId;
+    public String getFirstParentCommitId(){
+        return this.firstParentCommitId;
     }
 
-    public String GetSecondParentCommitId(){
-        return this.SecondParentCommitId;
+    public String getSecondParentCommitId(){
+        return this.secondParentCommitId;
     }
 
-    public HashMap<String,String> GetFileVersion(){
-        return this.FileVersion;
+    public HashMap<String,String> getFileVersion(){
+        return this.fileVersion;
     }
-
-
-
 }

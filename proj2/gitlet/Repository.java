@@ -39,11 +39,11 @@ public class Repository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Commit EmptyCommit = MakeEmptyCommit("initial commit");
-        SaveCommit(EmptyCommit);
-        String CommitId = GetCommitId(EmptyCommit);
-        BranchUtils.SaveBranchCommit("master", CommitId);
-        BranchUtils.SetHEAD("master");
+        Commit EmptyCommit = makeEmptyCommit("initial commit");
+        saveCommit(EmptyCommit);
+        String CommitId = getCommitId(EmptyCommit);
+        BranchUtils.saveBranchCommit("master", CommitId);
+        BranchUtils.setHEAD("master");
 
     }
 
@@ -59,8 +59,8 @@ public class Repository {
                 return;
             }
         }
-        IndexUtils.StagedFile(FileName);
-        IndexUtils.SaveIndex();
+        IndexUtils.stagedFile(FileName);
+        IndexUtils.saveIndex();
     }
 
     public static void commit(String CommitMessage) {
@@ -68,49 +68,49 @@ public class Repository {
             System.out.println("Please enter a commit message.");
             return;
         }
-        String LastCommitId = CommitUtils.GetLastCommitId();
-        Commit LastCommit = CommitUtils.GetCommitByCommitId(LastCommitId);
-        HashMap<String, String> LastFileVersion = LastCommit.GetFileVersion();
+        String LastCommitId = CommitUtils.getLastCommitId();
+        Commit LastCommit = CommitUtils.getCommitByCommitId(LastCommitId);
+        HashMap<String, String> LastFileVersion = LastCommit.getFileVersion();
 
         if (IndexMap.equals(LastFileVersion)) {
             System.out.println("No changes added to the commit.");
             return;
         }
 
-        Commit NowCommit = MakeCommit(CommitMessage);
-        SaveCommit(NowCommit);
+        Commit NowCommit = makeCommit(CommitMessage);
+        saveCommit(NowCommit);
         Utils.writeObject(STAGED_FILE, StagedMap);
-        CommitUtils.CreateFileObject(LastCommit, NowCommit);
+        CommitUtils.createFileObject(LastCommit, NowCommit);
         StagedMap.clear();
-        String NewCommitId = GetCommitId(NowCommit);
-        BranchUtils.SaveBranchCommit(HEAD, NewCommitId);
+        String NewCommitId = getCommitId(NowCommit);
+        BranchUtils.saveBranchCommit(HEAD, NewCommitId);
     }
 
     public static void rm(String FileName) {
-        boolean IsTrackedByLastCommit = IndexUtils.IsTrackedByCommit(FileName,GetLastCommit());
-        boolean IsStaged = IndexUtils.IsStaged(FileName,GetLastCommit());
+        boolean IsTrackedByLastCommit = CommitUtils.isTrackedByCommit(FileName,GetLastCommit());
+        boolean IsStaged = IndexUtils.isStaged(FileName,GetLastCommit());
         if (!IsStaged && !IsTrackedByLastCommit) {
             System.out.println("No reason to remove the file.");
             return;
         }
-        IndexUtils.UnStageFile(FileName);
-        IndexUtils.SaveIndex();
+        IndexUtils.unStageFile(FileName);
+        IndexUtils.saveIndex();
         if (IsTrackedByLastCommit) {
             restrictedDelete(join(CWD, FileName));
         }
     }
 
     public static void log() {
-        Commit LastCommit = GetCommitByCommitId(GetLastCommitId());
+        Commit LastCommit = getCommitByCommitId(getLastCommitId());
         while (LastCommit != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
             sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
             System.out.println("===");
-            System.out.println("commit " + GetCommitId(LastCommit));
-            System.out.println("Date: " + sdf.format(LastCommit.GetDate()));
-            System.out.println(LastCommit.GetMessage());
+            System.out.println("commit " + getCommitId(LastCommit));
+            System.out.println("Date: " + sdf.format(LastCommit.getDate()));
+            System.out.println(LastCommit.getMessage());
             System.out.println();
-            LastCommit = GetCommitByCommitId(LastCommit.GetFirstParentCommitId());
+            LastCommit = getCommitByCommitId(LastCommit.getFirstParentCommitId());
         }
     }
 
@@ -120,13 +120,13 @@ public class Repository {
             return;
         }
         for (String commitId : commitIdList) {
-            Commit commit = CommitUtils.GetCommitByCommitId(commitId);
+            Commit commit = CommitUtils.getCommitByCommitId(commitId);
             SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
             sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
             System.out.println("===");
             System.out.println("commit " + commitId);
-            System.out.println("Date: " + sdf.format(commit.GetDate()));
-            System.out.println(commit.GetMessage());
+            System.out.println("Date: " + sdf.format(commit.getDate()));
+            System.out.println(commit.getMessage());
             System.out.println();
         }
     }
@@ -138,8 +138,8 @@ public class Repository {
         }
         boolean found = false;
         for (String commitId : commitIdList) {
-            Commit commit = CommitUtils.GetCommitByCommitId(commitId);
-            if(commit.GetMessage().equals(message)) {
+            Commit commit = CommitUtils.getCommitByCommitId(commitId);
+            if(commit.getMessage().equals(message)) {
                 System.out.println(commitId);
                 found = true;
             }
@@ -150,7 +150,7 @@ public class Repository {
     }
 
     public static String GetFileContent(Commit commit, String FileName) {
-        String FileSha1 = commit.GetFileVersion().get(FileName);
+        String FileSha1 = commit.getFileVersion().get(FileName);
         return readContentsAsString(join(OBJECTS_DIR, FileSha1));
     }
 
@@ -158,8 +158,8 @@ public class Repository {
         //checkout -- [filename]
         if(args.length == 3 && args[1].equals("--")) {
             String FileName = args[2];
-            Commit LastCommit = GetCommitByCommitId(GetLastCommitId());
-            if(!LastCommit.GetFileVersion().containsKey(FileName)) {
+            Commit LastCommit = getCommitByCommitId(getLastCommitId());
+            if(!LastCommit.getFileVersion().containsKey(FileName)) {
                 System.out.println("File does not exist in that commit.");
                 return;
             }
@@ -174,7 +174,7 @@ public class Repository {
                 System.out.println("No commit with that id exists.");
                 return;
             }
-            if (!commit.GetFileVersion().containsKey(FileName)) {
+            if (!commit.getFileVersion().containsKey(FileName)) {
                 System.out.println("File does not exist in that commit.");
                 return;
             }
@@ -194,13 +194,13 @@ public class Repository {
                     List<String> CWDFileNames = plainFilenamesIn(CWD);
                     assert CWDFileNames != null;
                     for(String FileName:CWDFileNames) {
-                        if(!IndexUtils.IsTrackedByCommit(FileName, GetLastCommit())) {
+                        if(!CommitUtils.isTrackedByCommit(FileName, GetLastCommit())) {
                             System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                             return;
                         }
                     }
                     RestoreCommit(GetBranchLastCommit(BranchName));
-                    BranchUtils.SetHEAD(BranchName);
+                    BranchUtils.setHEAD(BranchName);
                 }
             }
         }else{
@@ -209,11 +209,11 @@ public class Repository {
     }
 
     public static void ckout(Commit commit, String fileName) {
-        if(!IsTrackedByCommit(fileName, commit)) {
+        if(!isTrackedByCommit(fileName, commit)) {
             System.out.println("File does not exist in that commit.");
             return;
         }
-        String fileSHA1 = commit.GetFileVersion().get(fileName);
+        String fileSHA1 = commit.getFileVersion().get(fileName);
         String fileConent = GetFileContent(commit, fileName);
         writeContents(join(CWD,fileName), fileSHA1);
     }
@@ -234,13 +234,13 @@ public class Repository {
         if (queryCount > 1) {
             throw new RuntimeException("this prefix is ambiguous, you must use longer prefix");
         }
-        return GetCommitByCommitId(resultCommitId);
+        return getCommitByCommitId(resultCommitId);
     }
 
     public static void RestoreCommit(Commit commit) {
         Commit currentCommit = Repository.GetLastCommit();
         // pre-check
-        for (String fileName : commit.GetFileVersion().keySet()) {
+        for (String fileName : commit.getFileVersion().keySet()) {
             if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 return;
@@ -248,23 +248,23 @@ public class Repository {
         }
 
         // 1. restore files to CWD
-        FileUtils.RestoreCommitFile(commit);
+        FileUtils.restoreCommitFile(commit);
 
         // 2. restore indexMap
         // note: to keep consistency, checkout branch just like the new branch's commit() just happen
         // so it will restore indexMap & .gitlet/index, but stagedFiles and its file stay empty.
-        IndexMap = commit.GetFileVersion();
+        IndexMap = commit.getFileVersion();
         StagedMap.clear();
-        IndexUtils.SaveIndex();
+        IndexUtils.saveIndex();
     }
 
     public static Commit GetBranchLastCommit(String BranchName) {
         String CommitId = readContentsAsString(join(BRANCH_DIR,BranchName));
-        return CommitUtils.GetCommitByCommitId(CommitId);
+        return CommitUtils.getCommitByCommitId(CommitId);
     }
 
     public static Commit GetLastCommit() {
-        return CommitUtils.GetCommitByCommitId(GetLastCommitId());
+        return CommitUtils.getCommitByCommitId(getLastCommitId());
     }
 
     public static void status(){
@@ -304,7 +304,7 @@ public class Repository {
 
     public static List<String> GetStagedFiles(Commit commit) {
         List<String> stagedFiles = new LinkedList<>();
-        HashMap<String,String> fileverison = commit.GetFileVersion();
+        HashMap<String,String> fileverison = commit.getFileVersion();
         for(String FileName : IndexMap.keySet()) {
             if(!fileverison.containsKey(FileName)) {
                 stagedFiles.add(FileName);//新加
@@ -325,7 +325,7 @@ public class Repository {
             System.out.println("A branch with that name already exists.");
             return;
         }
-        writeContents(join(BRANCH_DIR,BranchName),GetLastCommitId());
+        writeContents(join(BRANCH_DIR,BranchName), getLastCommitId());
     }
 
     public static void RemoveBranch(String BranchName) {
@@ -347,15 +347,15 @@ public class Repository {
             System.out.println("No commit with that id exists.");
             return;
         }
-        String commitId = CommitUtils.GetCommitId(commit);
+        String commitId = CommitUtils.getCommitId(commit);
         RestoreCommit(commit);
-        BranchUtils.SaveBranchCommit(HEAD, commitId);
+        BranchUtils.saveBranchCommit(HEAD, commitId);
     }
 
 
     public static List<String> GetRemovedFiles(Commit commit) {
         List<String> RemovedFiles = new LinkedList<>();
-        HashMap<String,String> fileverison = commit.GetFileVersion();
+        HashMap<String,String> fileverison = commit.getFileVersion();
         for(String FileName : fileverison.keySet()) {
             if(!IndexMap.containsKey(FileName)) {
                 RemovedFiles.add(FileName);
@@ -399,13 +399,13 @@ public class Repository {
             checkout(branchName);
             HEAD = savedHEAD;
             // fast-forward master pointer
-            BranchUtils.SaveBranchCommit(HEAD,BranchUtils.gerBranchCommitId(branchName));
+            BranchUtils.saveBranchCommit(HEAD,BranchUtils.getBranchCommitId(branchName));
             System.out.println("Current branch fast-forwarded.");
             return;
         }
-        Set<String> splitPointFiles = splitCommit.GetFileVersion().keySet();
-        Set<String> lastCommitFiles = lastCommit.GetFileVersion().keySet();
-        Set<String> branchCommitFiles = branchCommit.GetFileVersion().keySet();
+        Set<String> splitPointFiles = splitCommit.getFileVersion().keySet();
+        Set<String> lastCommitFiles = lastCommit.getFileVersion().keySet();
+        Set<String> branchCommitFiles = branchCommit.getFileVersion().keySet();
 
         Set<String>allFiles = new HashSet<>();
         allFiles.addAll(splitPointFiles);
@@ -446,10 +446,10 @@ public class Repository {
 
         commit("Merged " + branchName + "into " + HEAD + ".");
         Commit mergeCommit = GetLastCommit();
-        mergeCommit.SetSecondParentCommitId(BranchUtils.gerBranchCommitId(branchName));
-        SaveCommit(mergeCommit);
+        mergeCommit.setSecondParentCommitId(BranchUtils.getBranchCommitId(branchName));
+        saveCommit(mergeCommit);
 
-        BranchUtils.SaveBranchCommit(HEAD,GetCommitId(mergeCommit));
+        BranchUtils.saveBranchCommit(HEAD, getCommitId(mergeCommit));
         if(isConflict) {
             System.out.println("Encountered a merge conflict.");
         }

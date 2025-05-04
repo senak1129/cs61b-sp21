@@ -3,7 +3,6 @@ package gitlet;
 import static gitlet.Utils.*;
 import static gitlet.GitletContents.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 public class IndexUtils {
@@ -24,35 +23,33 @@ public class IndexUtils {
         }
     }
 
-    public static void SaveIndex(){
+
+    //为两个文件写入
+    public static void saveIndex(){
         Utils.writeObject(INDEX_FILE, IndexMap);
         Utils.writeObject(STAGED_FILE, StagedMap);
     }
 
     //暂存区
-    public static void StagedFile(String FileName){
-        String FileContent = readContentsAsString(join(CWD,FileName));
+    public static void stagedFile(String fileName){
+        String FileContent = readContentsAsString(join(CWD,fileName));
         String FileSha1 = sha1(FileContent);
-        IndexMap.put(FileName,FileSha1);
+        IndexMap.put(fileName,FileSha1);
         StagedMap.put(FileSha1,FileContent);
     }
 
     //新添加 或者 修改
-    public static boolean IsStaged(String FileName,Commit commit){
-        assert FileName != null && commit != null;
-        HashMap<String, String> fileVersionMap = commit.GetFileVersion();
-        return (IndexMap.containsKey(FileName) && !fileVersionMap.containsKey(FileName))
-                || (IndexMap.containsKey(FileName) && fileVersionMap.containsKey(FileName)
-                && !fileVersionMap.get(FileName).equals(IndexMap.get(FileName)));
+    public static boolean isStaged(String fileName, Commit commit){
+        assert fileName != null && commit != null;
+        HashMap<String, String> fileVersionMap = commit.getFileVersion();
+        return (IndexMap.containsKey(fileName) && !fileVersionMap.containsKey(fileName))
+                || (IndexMap.containsKey(fileName) && fileVersionMap.containsKey(fileName)
+                && !fileVersionMap.get(fileName).equals(IndexMap.get(fileName)));
     }
 
-    public static boolean IsTrackedByCommit(String FileName,Commit commit){
-        return commit.GetFileVersion().containsKey(FileName);
-    }
-
-    public static void UnStageFile(String FileName){
-        String FileSha1 = IndexMap.get(FileName);
+    public static void unStageFile(String fileName){
+        String FileSha1 = IndexMap.get(fileName);
         StagedMap.remove(FileSha1);
-        IndexMap.remove(FileName);
+        IndexMap.remove(fileName);
     }
 }

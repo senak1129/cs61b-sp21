@@ -6,22 +6,23 @@ import static gitlet.Utils.*;
 import static gitlet.GitletContents.*;
 public class BranchUtils {
 
-    public static void SaveBranchCommit(String BranchName, String CommitId) {
-        writeContents(join(BRANCH_DIR, BranchName), CommitId);
+
+    public static void saveBranchCommit(String branchName, String commitId) {
+        writeContents(join(BRANCH_DIR, branchName), commitId);
     }
 
-    public static void SetHEAD(String BranchName){
-        Repository.HEAD = BranchName;
-        writeContents(HEAD_FILE, BranchName);
+    public static void setHEAD(String branchName){
+        Repository.HEAD = branchName;
+        writeContents(HEAD_FILE, branchName);
     }
 
-    public static boolean branchExists(String BranchName) {
+    public static boolean branchExists(String branchName) {
         List<String> branchNameList = Repository.GetAllBranches();
-        return branchNameList.contains(BranchName);
+        return branchNameList.contains(branchName);
     }
 
-    public static Commit getBranchCommit(String BranchName){
-        File F = join(BRANCH_DIR, BranchName);
+    public static Commit getBranchCommit(String branchName){
+        File F = join(BRANCH_DIR, branchName);
         if(F.exists()){
             return Repository.GetCommitByCommitIdPrefix(readContentsAsString(F));
         }else{
@@ -29,12 +30,12 @@ public class BranchUtils {
         }
     }
 
-    public static void saveCommitId(String branchName, String CommitId) {
-        Utils.writeContents(join(BRANCH_DIR, branchName), CommitId);
+    public static void saveCommitId(String branchName, String commitId) {
+        Utils.writeContents(join(BRANCH_DIR, branchName), commitId);
     }
 
-    public static String gerBranchCommitId(String BranchName){
-        File F = join(BRANCH_DIR, BranchName);
+    public static String getBranchCommitId(String branchName){
+        File F = join(BRANCH_DIR, branchName);
         if(F.exists()){
             return readContentsAsString(F);
         }else{

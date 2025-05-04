@@ -9,38 +9,40 @@ import static gitlet.Utils.serialize;
 
 public class CommitUtils {
 
-    public static Commit MakeEmptyCommit(String message){
+    public static Commit makeEmptyCommit(String message){
         Commit c = new Commit();
-        c.SetMessage(message);
-        c.SetDate(new Date(0));
-        c.SetFirstParentCommitId(null);
-        c.SetSecondParentCommitId(null);
+        c.setMessage(message);
+        c.setDate(new Date(0));
+        c.setFirstParentCommitId(null);
+        c.setSecondParentCommitId(null);
         return c;
     }
 
-    public static Commit MakeCommit(String message){
+    public static Commit makeCommit(String message){
         Commit c = new Commit();
-        c.SetMessage(message);
-        c.SetDate(new Date(0));
-        c.SetFirstParentCommitId(GetLastCommitId());
-        c.SetSecondParentCommitId(null);
-        c.SetFileVersion(IndexUtils.IndexMap);
+        c.setMessage(message);
+        c.setDate(new Date(0));
+        c.setFirstParentCommitId(getLastCommitId());
+        c.setSecondParentCommitId(null);
+        c.setFileVersion(IndexUtils.IndexMap);
         return c;
     }
 
-    public static String GetLastCommitId(){
+    public static String getLastCommitId(){
         return readContentsAsString(join(BRANCH_DIR,Repository.HEAD));
     }
 
-    public static void SaveCommit(Commit commit){
-        String commitId = GetCommitId(commit);
+    //在commits_dir文件夹生成commit
+    public static void saveCommit(Commit commit){
+        String commitId = getCommitId(commit);
         File commitFile = join(COMMITS_DIR, commitId);
         writeObject(commitFile, commit);
     }
 
-    public static void CreateFileObject(Commit LastCommit, Commit NowCommit){
-        HashMap<String,String>LastFileVersion = LastCommit.GetFileVersion();
-        HashMap<String,String>NowFileVersion = NowCommit.GetFileVersion();
+    //在objects_dir文件夹生成
+    public static void createFileObject(Commit LastCommit, Commit NowCommit){
+        HashMap<String,String>LastFileVersion = LastCommit.getFileVersion();
+        HashMap<String,String>NowFileVersion = NowCommit.getFileVersion();
         for(String FileName : NowFileVersion.keySet()){
             if(!LastFileVersion.containsKey(FileName)){
                 String FileSha1 = NowFileVersion.get(FileName);
@@ -55,7 +57,7 @@ public class CommitUtils {
         }
     }
 
-    public static Commit GetCommitByCommitId(String commitId) {
+    public static Commit getCommitByCommitId(String commitId) {
         if (commitId == null) {
             return null;
         }
@@ -80,12 +82,12 @@ public class CommitUtils {
         while (!stack.isEmpty()) {
             Commit cur = stack.pop();
             if (cur == null) continue;
-            String id = GetCommitId(cur);       // 你的提交 ID 方法
+            String id = getCommitId(cur);       // 你的提交 ID 方法
             if (!seen.add(id)) continue;                  // 已访问过就跳过
 
             // 把所有父提交都压栈
-            String p1 = cur.GetFirstParentCommitId();
-            String p2 = cur.GetSecondParentCommitId();   // 可能为 null
+            String p1 = cur.getFirstParentCommitId();
+            String p2 = cur.getSecondParentCommitId();   // 可能为 null
             if (p1 != null) stack.push(Repository.GetCommitByCommitIdPrefix(p1));
             if (p2 != null) stack.push(Repository.GetCommitByCommitIdPrefix(p2));
         }
@@ -97,15 +99,15 @@ public class CommitUtils {
         while (!queue.isEmpty()) {
             Commit cur = queue.poll();
             if (cur == null) continue;
-            String id = GetCommitId(cur);
+            String id = getCommitId(cur);
             if (!visited2.add(id)) continue;
 
             if (seen.contains(id)) {
                 return cur;  // 找到 split point
             }
 
-            String p1 = cur.GetFirstParentCommitId();
-            String p2 = cur.GetSecondParentCommitId();
+            String p1 = cur.getFirstParentCommitId();
+            String p2 = cur.getSecondParentCommitId();
             if (p1 != null) queue.add(Repository.GetCommitByCommitIdPrefix(p1));
             if (p2 != null) queue.add(Repository.GetCommitByCommitIdPrefix(p2));
         }
@@ -115,17 +117,17 @@ public class CommitUtils {
 
     public static boolean isSameCommit(Commit commit1, Commit commit2) {
         if(commit1 == null || commit2 == null) return false;
-        return GetCommitId(commit1).equals(GetCommitId(commit2));
+        return getCommitId(commit1).equals(getCommitId(commit2));
     }
 
-    public static String GetCommitId(Commit commit){
+    public static String getCommitId(Commit commit){
         return sha1(serialize(commit));
     }
 
     public static boolean isConsistent(String fileName,Commit commit1,Commit commit2){
         assert fileName != null && commit1 != null && commit2 != null;
-        HashMap<String,String>fileVersion1 = commit1.GetFileVersion();
-        HashMap<String,String>fileVersion2 = commit2.GetFileVersion();
+        HashMap<String,String>fileVersion1 = commit1.getFileVersion();
+        HashMap<String,String>fileVersion2 = commit2.getFileVersion();
         boolean existInCommit1 = fileVersion1.containsKey(fileName);
         boolean existInCommit2 = fileVersion2.containsKey(fileName);
         if(!existInCommit1 && !existInCommit2) return true;
@@ -137,9 +139,13 @@ public class CommitUtils {
 
     public static Boolean hasSameFileVersion(String fileName,Commit commit1,Commit commit2){
         assert fileName != null && commit1 != null && commit2 != null;
-        HashMap<String,String>fileVersion1 = commit1.GetFileVersion();
-        HashMap<String,String>fileVersion2 = commit2.GetFileVersion();
+        HashMap<String,String>fileVersion1 = commit1.getFileVersion();
+        HashMap<String,String>fileVersion2 = commit2.getFileVersion();
         if(!fileVersion1.containsKey(fileName) || !fileVersion2.containsKey(fileName)) return null;
         return fileVersion1.get(fileName).equals(fileVersion2.get(fileName));
+    }
+
+    public static boolean isTrackedByCommit(String fileName, Commit commit){
+        return commit.getFileVersion().containsKey(fileName);
     }
 }
