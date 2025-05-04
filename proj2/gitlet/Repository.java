@@ -318,15 +318,34 @@ public class Repository {
     }
 
     public static void Reset(String commitIdPrefix) {
-        Commit commit = GetCommitByCommitIdPrefix(commitIdPrefix);
-        String fullCommitId = GetCommitId(commit);
-        if(commit == null) {
+        Commit target = GetCommitByCommitIdPrefix(commitIdPrefix);
+        if (target == null) {
             System.out.println("No commit with that id exists.");
             return;
         }
-        RestoreCommit(commit);
-        BranchUtils.SaveBranchCommit(HEAD,fullCommitId);
+        Commit current = GetLastCommit();
+        Set<String> currTracked = current.GetFileVersion().keySet();
+        Set<String> targetTracked = target.GetFileVersion().keySet();
+        List<String> cwdFiles = plainFilenamesIn(CWD);
+        for (String fname : cwdFiles) {
+            if (!currTracked.contains(fname)) {
+                if (targetTracked.contains(fname)) {
+                    System.out.println(
+                            "There is an untracked file in the way; " +
+                                    "delete it, or add and commit it first."
+                    );
+                    return;
+                }
+            }
+        }
+
+        StagedMap.clear();
+        IndexUtils.SaveIndex();
+        FileUtils.RestoreCommitFile(target);
+        String fullId = GetCommitId(target);
+        BranchUtils.SaveBranchCommit(HEAD, fullId);
     }
+
 
     public static List<String> GetRemovedFiles(Commit commit) {
         List<String> RemovedFiles = new LinkedList<>();
