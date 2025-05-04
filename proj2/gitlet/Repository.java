@@ -317,14 +317,15 @@ public class Repository {
         join(BRANCH_DIR,BranchName).delete();
     }
 
-    public static void Reset(String CommitId) {
-        Commit commit = GetCommitByCommitIdPrefix(CommitId);
+    public static void Reset(String commitIdPrefix) {
+        Commit commit = GetCommitByCommitIdPrefix(commitIdPrefix);
+        String fullCommitId = GetCommitId(commit);
         if(commit == null) {
             System.out.println("No commit with that id exists.");
             return;
         }
         RestoreCommit(commit);
-        BranchUtils.SaveBranchCommit(HEAD,CommitId);
+        BranchUtils.SaveBranchCommit(HEAD,fullCommitId);
     }
 
     public static List<String> GetRemovedFiles(Commit commit) {

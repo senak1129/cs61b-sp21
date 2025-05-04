@@ -1,21 +1,25 @@
 package gitlet;
 
+import java.util.List;
+
 import static gitlet.GitletContents.CWD;
 import static gitlet.Utils.join;
 import static gitlet.Utils.restrictedDelete;
 
 public class FileUtils {
-    public static void RestoreCommitFile(Commit TargetCommit) {
-        //将目标commit的文件写入工作目录(覆盖)
-        for(String FileName : TargetCommit.GetFileVersion().keySet()) {
-            String Contents = Repository.GetFileContent(TargetCommit, FileName);
-            Utils.writeContents(join(CWD,FileName), Contents);
+    public static void RestoreCommitFile(Commit target) {
+        // 1. 把目标提交里的文件检出到工作目录
+        for (String fname : target.GetFileVersion().keySet()) {
+            String contents = Repository.GetFileContent(target, fname);
+            Utils.writeContents(Utils.join(CWD, fname), contents);
         }
-        //删除当前分支有但目标分支没有的文件
-        for(String FileName : Repository.GetLastCommit().GetFileVersion().keySet()) {
-            if(!TargetCommit.GetFileVersion().containsKey(FileName)) {
-                restrictedDelete(join(CWD,FileName));
+        // 2. 删除工作目录里所有“不属于目标提交”的文件
+        List<String> cwdFiles = Utils.plainFilenamesIn(CWD);
+        for (String fname : cwdFiles) {
+            if (!target.GetFileVersion().containsKey(fname)) {
+                Utils.restrictedDelete(Utils.join(CWD, fname));
             }
         }
     }
+
 }
