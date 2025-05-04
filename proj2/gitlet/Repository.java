@@ -227,9 +227,23 @@ public class Repository {
         return GetCommitByCommitId(resultCommitId);
     }
 
-    public static void RestoreCommit(Commit TargetCommit) {
-        FileUtils.RestoreCommitFile(TargetCommit);
-        IndexMap = new HashMap<>(TargetCommit.GetFileVersion());
+    public static void RestoreCommit(Commit commit) {
+        Commit currentCommit = Repository.GetLastCommit();
+        // pre-check
+        for (String fileName : commit.GetFileVersion().keySet()) {
+            if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
+            }
+        }
+
+        // 1. restore files to CWD
+        FileUtils.RestoreCommitFile(commit);
+
+        // 2. restore indexMap
+        // note: to keep consistency, checkout branch just like the new branch's commit() just happen
+        // so it will restore indexMap & .gitlet/index, but stagedFiles and its file stay empty.
+        IndexMap = commit.GetFileVersion();
         StagedMap.clear();
         IndexUtils.SaveIndex();
     }
@@ -318,32 +332,14 @@ public class Repository {
     }
 
     public static void Reset(String commitIdPrefix) {
-        Commit target = GetCommitByCommitIdPrefix(commitIdPrefix);
-        if (target == null) {
+        Commit commit = GetCommitByCommitIdPrefix(commitIdPrefix);
+        if (commit == null) {
             System.out.println("No commit with that id exists.");
             return;
         }
-        Commit current = GetLastCommit();
-        Set<String> currTracked = current.GetFileVersion().keySet();
-        Set<String> targetTracked = target.GetFileVersion().keySet();
-        List<String> cwdFiles = plainFilenamesIn(CWD);
-        for (String fname : cwdFiles) {
-            if (!currTracked.contains(fname)) {
-                if (targetTracked.contains(fname)) {
-                    System.out.println(
-                            "There is an untracked file in the way; " +
-                                    "delete it, or add and commit it first."
-                    );
-                    return;
-                }
-            }
-        }
-
-        StagedMap.clear();
-        IndexUtils.SaveIndex();
-        FileUtils.RestoreCommitFile(target);
-        String fullId = GetCommitId(target);
-        BranchUtils.SaveBranchCommit(HEAD, fullId);
+        String commitId = CommitUtils.GetCommitId(commit);
+        RestoreCommit(commit);
+        BranchUtils.SaveBranchCommit(HEAD, commitId);
     }
 
 
