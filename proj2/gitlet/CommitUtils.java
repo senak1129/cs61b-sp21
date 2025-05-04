@@ -70,8 +70,8 @@ public class CommitUtils {
     }
 
     public static Commit findSplitPoint(String b1, String b2) {
-        Commit head1 = BranchUtils.getBranchLastCommit(b1);
-        Commit head2 = BranchUtils.getBranchLastCommit(b2);
+        Commit head1 = BranchUtils.getBranchCommit(b1);
+        Commit head2 = BranchUtils.getBranchCommit(b2);
 
         // 1. 收集 b1 所有祖先
         Set<String> seen = new HashSet<>();
