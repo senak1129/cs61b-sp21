@@ -21,124 +21,176 @@ public class Repository {
         return GITLET_DIR.exists();
     }
 
+    /**
+     * 初始化 Gitlet 仓库。
+     *
+     * 如果当前目录下已经存在 Gitlet 仓库，则会提示用户，并返回。否则，会在当前目录创建必要的 Gitlet 文件夹和文件，并初始化一个空的提交（initial commit）。
+     */
     public static void init() {
-        //如果gitlet文件夹存在
+        // 如果 gitlet 文件夹已经存在
         if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
             return;
         }
-        //创建
+        // 创建所需的目录
         GITLET_DIR.mkdirs();
         BRANCH_DIR.mkdirs();
         OBJECTS_DIR.mkdirs();
         COMMITS_DIR.mkdirs();
         try {
+            // 创建文件
             HEAD_FILE.createNewFile();
             INDEX_FILE.createNewFile();
             STAGED_FILE.createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Commit EmptyCommit = makeEmptyCommit("initial commit");
-        saveCommit(EmptyCommit);
-        String CommitId = getCommitId(EmptyCommit);
-        BranchUtils.saveBranchCommit("master", CommitId);
+        // 创建一个空的提交作为初始化提交
+        Commit emptyCommit = makeEmptyCommit("initial commit");
+        saveCommit(emptyCommit);
+        String commitId = getCommitId(emptyCommit);
+        // 保存 "master" 分支的提交
+        BranchUtils.saveBranchCommit("master", commitId);
+        // 设置 HEAD 为 "master" 分支
         BranchUtils.setHEAD("master");
     }
 
+    /**
+     * 将文件添加到暂存区（Index）中。
+     *
+     * 该方法会检查文件是否存在。如果文件已经存在于暂存区，并且内容没有变化，则不会进行任何操作。
+     * 如果文件内容有变动或者是新文件，将该文件添加到暂存区并保存索引。
+     *
+     * @param fileName 要添加的文件名
+     */
     public static void add(String fileName) {
+        // 检查文件是否存在
         if (!join(CWD, fileName).exists()) {
             System.out.println("File does not exist.");
             return;
         }
+        // 检查文件是否已经被暂存，且内容没有变化
         if (IndexMap.containsKey(fileName)) {
             String fileNameSha1 = IndexMap.get(fileName);
             String fileNameSha2 = sha1(readContentsAsString(join(CWD, fileName)));
             if (fileNameSha1.equals(fileNameSha2)) {
-                return;
+                return; // 文件内容没有变化
             }
         }
-        //写入两张map
+        // 将文件写入暂存区（Index）
         IndexUtils.stagedFile(fileName);
-        //写入两个文件
+        // 保存索引和暂存区
         IndexUtils.saveIndex();
     }
 
-    /*
-    1:首先确保commitMessage不为空
-    2:确保这次提交和上一次提交是有差异的(!IndexMap.equals(fileVersion)
-    3:使用makeCommit创建新提交，IndexMap作为其fileVersion，为了保存这个commit，在commits文件夹创建一个文件[id,commit]，在objects文件夹创建每个文件版本的对象[contentSHA1:content]
-    4:清空暂存区，并为stagedfile和index写入
-    5:为目前分支写入最新一次提交
+    /**
+     * 提交当前暂存区的变更并创建一个新的提交。
+     *
+     * 1. 首先确保提交信息不为空。
+     * 2. 确保这次提交与上次提交有所不同（即 IndexMap 与上次提交的文件版本不同）。
+     * 3. 使用 `makeCommit` 方法创建一个新的提交，将 IndexMap 作为文件版本。
+     * 4. 将提交保存到 `commits` 文件夹，并为每个文件版本在 `objects` 文件夹中创建对象。
+     * 5. 清空暂存区，并将更新的索引写入文件。
+     * 6. 更新当前分支的提交 ID。
+     *
+     * @param commitMessage 提交信息
      */
     public static void commit(String commitMessage) {
+        // 确保提交信息不为空
         if (commitMessage.isEmpty()) {
             System.out.println("Please enter a commit message.");
             return;
         }
+
+        // 获取上次提交的 ID 和 Commit 对象
         String lastCommitId = CommitUtils.getLastCommitId();
         Commit lastCommit = CommitUtils.getCommitByCommitId(lastCommitId);
         HashMap<String, String> fileVersion = lastCommit.getFileVersion();
 
+        // 如果暂存区与上次提交的文件版本相同，说明没有更改
         if (IndexMap.equals(fileVersion)) {
             System.out.println("No changes added to the commit.");
             return;
         }
 
-        //创建新的commit fileversion = IndexMap
+        // 创建当前的提交对象，文件版本为 IndexMap
         Commit nowCommit = makeCommit(commitMessage);
 
-        //在commits文件夹创建
+        // 在 commits 文件夹中保存提交
         saveCommit(nowCommit);
-        //在objects文件夹创建
+
+        // 在 objects 文件夹中保存文件版本对象
         CommitUtils.createFileObject(lastCommit, nowCommit);
-        //清空暂存区
+
+        // 清空暂存区
         StagedMap.clear();
-        //为两文件写入
+
+        // 保存索引文件
         IndexUtils.saveIndex();
 
+        // 获取当前提交的 ID
         String newCommitId = getCommitId(nowCommit);
-        //为目前分支写入最新一次提交
+
+        // 更新当前分支的提交 ID
         BranchUtils.saveBranchCommit(HEAD, newCommitId);
     }
 
-    /*
-    1:false false:文件没有被添加（add）也没有被提交（commit）。可能是刚创建的新文件，也可能是已被移除索引的文件。
-    2:true false:文件已被 add 暂存，但尚未被提交。也可能是修改后被再次 add 的新文件。
-    3:false true:文件曾在某次提交中存在，但当前没有被 add（可能是用户手动删除了）。
-    4:true true:文件曾经提交过，且现在在暂存区中也存在（通常是修改后又 add 了）。
+    /**
+     * 删除指定文件。
+     *
+     * 删除文件有以下几种情况：
+     * 1. 如果文件未被暂存且未被提交，则输出提示信息并返回。
+     * 2. 如果文件已被暂存但尚未提交，移除文件从暂存区并保存更改。
+     * 3. 如果文件曾经被提交，但用户手动删除该文件，也会从暂存区移除，并在工作区删除该文件。
+     *
+     * @param fileName 要删除的文件名
      */
     public static void rm(String fileName) {
-        boolean isStaged = IndexUtils.isStaged(fileName,GetLastCommit());
-        boolean isTrackedByLastCommit = CommitUtils.isTrackedByCommit(fileName,GetLastCommit());
+        boolean isStaged = IndexUtils.isStaged(fileName, GetLastCommit());
+        boolean isTrackedByLastCommit = CommitUtils.isTrackedByCommit(fileName, GetLastCommit());
+
+        // 如果文件既未暂存，也未提交，则无理由删除
         if (!isStaged && !isTrackedByLastCommit) {
             System.out.println("No reason to remove the file.");
             return;
         }
-        //为两张map清除fileName
+
+        // 移除文件从暂存区
         IndexUtils.unStageFile(fileName);
-        //保存进两个文件
+
+        // 保存更改
         IndexUtils.saveIndex();
-        //如果是被上一个文件跟踪还需要删除这个文件
+
+        // 如果文件是被上一个提交跟踪的，还需要删除工作区中的该文件
         if (isTrackedByLastCommit) {
             restrictedDelete(join(CWD, fileName));
         }
     }
 
+    /**
+     * 打印当前分支的提交历史记录。
+     *
+     * 从当前分支的最新提交开始，依次遍历所有父提交，并打印每个提交的提交信息、提交日期及提交 ID。
+     */
     public static void log() {
-        Commit LastCommit = getCommitByCommitId(getLastCommitId());
-        while (LastCommit != null) {
+        Commit lastCommit = getCommitByCommitId(getLastCommitId());
+        while (lastCommit != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
             sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
             System.out.println("===");
-            System.out.println("commit " + getCommitId(LastCommit));
-            System.out.println("Date: " + sdf.format(LastCommit.getDate()));
-            System.out.println(LastCommit.getMessage());
+            System.out.println("commit " + getCommitId(lastCommit));
+            System.out.println("Date: " + sdf.format(lastCommit.getDate()));
+            System.out.println(lastCommit.getMessage());
             System.out.println();
-            LastCommit = getCommitByCommitId(LastCommit.getFirstParentCommitId());
+            lastCommit = getCommitByCommitId(lastCommit.getFirstParentCommitId());
         }
     }
 
+    /**
+     * 打印仓库中的所有提交历史。
+     *
+     * 遍历所有提交，并打印每个提交的提交信息、提交日期及提交 ID。
+     */
     public static void globalLog() {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
         if (commitIdList == null || commitIdList.isEmpty()) {
@@ -156,6 +208,14 @@ public class Repository {
         }
     }
 
+    /**
+     * 根据提交信息查找提交 ID。
+     *
+     * 遍历仓库中的所有提交，并查找提交信息与给定信息相匹配的提交。如果找到，输出该提交的 ID。
+     * 如果没有找到，则输出提示信息。
+     *
+     * @param message 提交信息
+     */
     public static void find(String message) {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
         if (commitIdList == null || commitIdList.isEmpty()) {
@@ -164,7 +224,7 @@ public class Repository {
         boolean found = false;
         for (String commitId : commitIdList) {
             Commit commit = CommitUtils.getCommitByCommitId(commitId);
-            if(commit.getMessage().equals(message)) {
+            if (commit.getMessage().equals(message)) {
                 System.out.println(commitId);
                 found = true;
             }
@@ -174,12 +234,29 @@ public class Repository {
         }
     }
 
-    public static String GetFileContent(Commit commit, String FileName) {
-        String FileSha1 = commit.getFileVersion().get(FileName);
-        return readContentsAsString(join(OBJECTS_DIR, FileSha1));
+    /**
+     * 获取指定提交中的文件内容。
+     *
+     * 根据提交对象和文件名获取指定文件的内容。
+     *
+     * @param commit 提交对象
+     * @param fileName 文件名
+     * @return 文件内容
+     */
+    public static String GetFileContent(Commit commit, String fileName) {
+        String fileSha1 = commit.getFileVersion().get(fileName);
+        return readContentsAsString(join(OBJECTS_DIR, fileSha1));
     }
 
-    public static void checkout(String...args) {
+    /**
+     * 检出分支或指定提交中的文件。
+     *
+     * 如果给定的是分支名称，则会切换到该分支。检查工作区是否有未提交的文件，如果有，则输出提示信息。
+     * 如果给定的是提交 ID，则会恢复提交中的文件内容。
+     *
+     * @param args 参数数组
+     */
+    public static void checkout(String... args) {
         Commit commit = null;
         if (args.length > 2) {
             String fileName;
@@ -207,8 +284,16 @@ public class Repository {
         }
     }
 
+    /**
+     * 切换到指定分支。
+     *
+     * 切换分支之前，检查工作区是否有未提交的文件。如果没有问题，恢复该分支的内容并将 HEAD 指向该分支。
+     *
+     * @param commit 当前提交对象
+     * @param branchName 分支名称
+     */
     public static void checkoutBranch(Commit commit, String branchName) {
-        if (!BranchUtils.branchExists(branchName)) { // branchExists() will assert branchName != null
+        if (!BranchUtils.branchExists(branchName)) {
             System.out.println("No such branch exists.");
             return;
         }
@@ -216,32 +301,23 @@ public class Repository {
             System.out.println("No need to checkout the current branch.");
             return;
         }
-        List<String> CWDFileNames = plainFilenamesIn(CWD);
-        assert CWDFileNames != null;
-        for (String fileName : CWDFileNames) {
+        List<String> cwdFileNames = plainFilenamesIn(CWD);
+        assert cwdFileNames != null;
+        for (String fileName : cwdFileNames) {
             if (!CommitUtils.isTrackedByCommit(fileName, commit)) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 return;
             }
         }
-        // restore commit to CWD
+        // 恢复分支提交的内容到工作区
         Commit newBranchCommit = CommitUtils.getCommitByCommitId(BranchUtils.getBranchCommitId(branchName));
         restoreCommit(newBranchCommit);
 
-        // 3. set HEAD == new branch name
+        // 设置 HEAD 为新分支
         BranchUtils.setHEAD(branchName);
     }
 
 
-    public static void ckout(Commit commit, String fileName) {
-        if (!isTrackedByCommit(fileName, commit)) {
-            System.out.println("File does not exist in that commit.");
-            return;
-        }
-        String fileSHA1 = commit.getFileVersion().get(fileName);
-        String fileConent = GetFileContent(commit, fileName);
-        writeContents(join(CWD,fileName), fileSHA1);
-    }
 
     public static Commit GetCommitByCommitIdPrefix(String commitIdPrefix) {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
@@ -297,35 +373,47 @@ public class Repository {
     }
 
 
-    public static Commit GetBranchLastCommit(String BranchName) {
-        String CommitId = readContentsAsString(join(BRANCH_DIR,BranchName));
-        return CommitUtils.getCommitByCommitId(CommitId);
-    }
-
+    /**
+     * 获取当前分支的最后一次提交。
+     *
+     * 通过获取当前分支的提交 ID，调用 `CommitUtils` 来获取对应的 `Commit` 对象。
+     *
+     * @return 当前分支的最后一次提交对象
+     */
     public static Commit GetLastCommit() {
         return CommitUtils.getCommitByCommitId(getLastCommitId());
     }
 
+    /**
+     * 显示当前 Git 仓库的状态。
+     *
+     * 该方法依次输出以下信息：
+     * 1. 所有分支，标记当前分支。
+     * 2. 已暂存的文件（Staged Files）。
+     * 3. 被移除的文件（Removed Files）。
+     * 4. 尚未暂存但已修改的文件（Modifications Not Staged For Commit）。
+     * 5. 未跟踪的文件（Untracked Files）。
+     */
     public static void status() {
         System.out.println("=== Branches ===");
-        List<String> BranchList = getAllBranches();
-        for (String BranchName:BranchList) {
-            if (BranchName.equals(HEAD)) {
-                System.out.println("*"+BranchName);
+        List<String> branchList = getAllBranches();
+        for (String branchName : branchList) {
+            if (branchName.equals(HEAD)) {
+                System.out.println("*" + branchName);  // 当前分支前加上星号
             } else {
-                System.out.println(BranchName);
+                System.out.println(branchName);
             }
         }
         System.out.println();
 
         System.out.println("=== Staged Files ===");
-        List<String> StagedFile = getStagedFiles(GetLastCommit());
-        StagedFile.forEach(System.out::println);
+        List<String> stagedFiles = getStagedFiles(GetLastCommit());
+        stagedFiles.forEach(System.out::println);  // 打印已暂存的文件
         System.out.println();
 
         System.out.println("=== Removed Files ===");
-        List<String> RemovedFile = getRemovedFiles(GetLastCommit());
-        RemovedFile.forEach(System.out::println);
+        List<String> removedFiles = getRemovedFiles(GetLastCommit());
+        removedFiles.forEach(System.out::println);  // 打印已移除的文件
         System.out.println();
 
         System.out.println("=== Modifications Not Staged For Commit ===");
@@ -335,11 +423,19 @@ public class Repository {
         System.out.println();
     }
 
+    /**
+     * 获取当前所有分支的列表。
+     *
+     * 该方法从 `BRANCH_DIR` 目录中读取所有分支的文件，并按字母顺序排序。
+     *
+     * @return 当前仓库的所有分支名称列表
+     */
     public static List<String> getAllBranches() {
         List<String> branchList = plainFilenamesIn(BRANCH_DIR);
-        branchList.sort(String::compareTo);
+        branchList.sort(String::compareTo);  // 按字母顺序排序
         return branchList;
     }
+
 
     /**
      * 获取已暂存的文件列表（即将纳入下一次提交的文件）。
@@ -377,18 +473,32 @@ public class Repository {
     }
 
 
-    public static void makeNewBranch(String BranchName) {
-        List<String> BranchList = getAllBranches();
-        if(BranchList.contains(BranchName)) {
+    /**
+     * 创建一个新的分支。
+     *
+     * 首先检查指定的分支名是否已存在。如果分支名已存在，则输出错误信息并返回。否则，创建该分支，并将当前分支的提交 ID 保存在新分支的文件中。
+     *
+     * @param branchName 要创建的新分支的名称
+     */
+    public static void makeNewBranch(String branchName) {
+        List<String> branchList = getAllBranches();
+        if (branchList.contains(branchName)) {
             System.out.println("A branch with that name already exists.");
             return;
         }
-        writeContents(join(BRANCH_DIR,BranchName), getLastCommitId());
+        writeContents(join(BRANCH_DIR, branchName), getLastCommitId());
     }
 
+    /**
+     * 删除指定的分支。
+     *
+     * 首先检查指定的分支是否存在。如果分支不存在，则输出错误信息并返回。如果分支是当前分支（HEAD），则无法删除该分支。
+     *
+     * @param branchName 要删除的分支的名称
+     */
     public static void removeBranch(String branchName) {
-        List<String> BranchList = getAllBranches();
-        if (!BranchList.contains(branchName)) {
+        List<String> branchList = getAllBranches();
+        if (!branchList.contains(branchName)) {
             System.out.println("A branch with that name does not exist.");
             return;
         }
@@ -396,10 +506,16 @@ public class Repository {
             System.out.println("Cannot remove the current branch.");
             return;
         }
-        join(BRANCH_DIR,branchName).delete();
+        join(BRANCH_DIR, branchName).delete();
     }
 
-    //说白了就是不能有未跟踪文件 比如新建一个文件 什么都没干  因为等会要把commit的内容覆盖给工作区
+    /**
+     * 重置当前分支到指定的提交。
+     *
+     * 根据给定的提交 ID 前缀查找提交。如果提交存在，则将工作区恢复到该提交的状态，并更新当前分支的提交 ID。
+     *
+     * @param commitIdPrefix 提交 ID 前缀
+     */
     public static void reset(String commitIdPrefix) {
         Commit commit = GetCommitByCommitIdPrefix(commitIdPrefix);
         if (commit == null) {
@@ -411,6 +527,23 @@ public class Repository {
         BranchUtils.saveBranchCommit(HEAD, commitId);
     }
 
+    /**
+     * 检出指定提交中的文件。
+     *
+     * 根据提交对象和文件名，恢复文件到当前工作区。如果文件在该提交中不存在，则输出错误信息。
+     *
+     * @param commit 提交对象
+     * @param fileName 要恢复的文件名
+     */
+    public static void checkoutFile(Commit commit, String fileName) {
+        if (!CommitUtils.isTrackedByCommit(fileName, commit)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        String fileSHA1 = commit.getFileVersion().get(fileName);
+        String fileContent = FileUtils.getFileContent(fileSHA1);
+        FileUtils.writeCWDFile(fileName, fileContent);
+    }
 
     /**
      * 获取被移除的文件列表（即：上次提交中存在，但现在不在暂存区 Index 中的文件）。
@@ -440,53 +573,76 @@ public class Repository {
     }
 
 
+    /**
+     * 合并指定分支到当前分支。
+     * 处理 fast-forward、已经合并、冲突等情况。
+     *
+     * 合并操作会对工作目录进行修改，因此在执行前必须满足以下条件：
+     * - 工作区没有未提交的变更（包括 staged 和 removed 文件）
+     * - 指定分支存在，且不是当前分支
+     *
+     * 合并可能导致冲突文件被写入特殊格式，用户需手动解决后提交。
+     *
+     * @param branchName 要合并进当前分支的目标分支名
+     */
     public static void merge(String branchName) {
-        // pre check fail cases
+        // ========== 前置检查阶段 ==========
+
+        // 检查目标分支是否存在
         if (!BranchUtils.branchExists(branchName)) {
             System.out.println("A branch with that name does not exist.");
             return;
         }
+
+        // 检查是否尝试合并自身
         if (HEAD.equals(branchName)) {
             System.out.println("Cannot merge a branch with itself.");
             return;
         }
+
         Commit currentCommit = CommitUtils.getLastCommit();
+
+        // 如果暂存区非空，则拒绝合并
         List<String> stagedFileNames = getStagedFiles(currentCommit);
         List<String> removedFileNames = getRemovedFiles(currentCommit);
         if (!stagedFileNames.isEmpty() || !removedFileNames.isEmpty()) {
             System.out.println("You have uncommitted changes.");
             return;
         }
-        // get current-branch commit, target-branch commit & split point commit
+
+        // 获取目标分支的 commit 和分裂点 commit
         Commit branchCommit = BranchUtils.getBranchCommit(branchName);
-        // Commit splitPoint = CommitUtils.getSplitCommit(HEAD, branchName);
         Commit splitPoint = CommitUtils.findSplitPoint(HEAD, branchName);
 
-        // the cases in which the current branch and target branch in the same line
+        // ========== 特殊情况处理 ==========
+
+        // 情况 1：目标分支是当前分支的祖先（无需合并）
         if (splitPoint == null || CommitUtils.isSameCommit(branchCommit, splitPoint)) {
             System.out.println("Given branch is an ancestor of the current branch.");
-            return; // in this case, head & branch points to the same commit, no need to merge
+            return;
         }
+
+        // 情况 2：当前分支是目标分支的祖先（直接快进）
         if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
             String savedHEAD = HEAD;
-            String []ns = new String[2];
-            ns[0] = "checkout";
-            ns[1] = branchName;
-            checkout(ns); // checkout branch, note it will change head --> another branch
+            String[] ns = new String[] { "checkout", branchName };
+            checkout(ns); // 切换到目标分支
             HEAD = savedHEAD;
-            // fast-forward master pointers
+
+            // 将当前分支快进到目标分支最新 commit
             BranchUtils.saveBranchCommit(HEAD, BranchUtils.getBranchCommitId(branchName));
             System.out.println("Current branch fast-forwarded.");
             return;
         }
 
-        // Complex situation: merge with no conflict or merge with conflict
+        // ========== 一般合并操作 ==========
+
         Set<String> splitPointFiles = splitPoint.getFileVersion().keySet();
         Set<String> currentCommitFiles = currentCommit.getFileVersion().keySet();
         Set<String> branchCommitFiles = branchCommit.getFileVersion().keySet();
-        // union the upper three set to get all relevant files in three commits
-        // bug: you have to allocate new memory, not reference
-        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles); // there is other usage with variable splitPointFiles
+
+        // 计算所有涉及的文件（并集）
+        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles);
         allRelevantFiles.addAll(currentCommitFiles);
         allRelevantFiles.addAll(branchCommitFiles);
 
@@ -496,25 +652,25 @@ public class Repository {
             boolean splitCurrentConsistent = CommitUtils.isConsistent(fileName, splitPoint, currentCommit);
             boolean splitBranchConsistent = CommitUtils.isConsistent(fileName, splitPoint, branchCommit);
             boolean branchCurrentConsistent = CommitUtils.isConsistent(fileName, currentCommit, branchCommit);
-            // merge no conflicts
+
+            // 情况：分支未修改，当前修改，无需处理
             if ((splitBranchConsistent && !splitCurrentConsistent) || branchCurrentConsistent) {
                 continue;
             }
 
+            // 情况：分支修改，当前未修改 -> 使用分支文件覆盖或删除
             if (!splitBranchConsistent && splitCurrentConsistent) {
                 if (!branchCommitFiles.contains(fileName)) {
-                    // in this case, other two commit must contain the file
-                    // remove the file from CWD & not tracked this file in merged commit
-                    // which means drop indexMap's record with this fileName
-                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                    // 分支删除了文件，我们也应删除
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         return;
                     } else {
                         rm(fileName);
                     }
                 } else {
-                    // in this case, we will checkout the file in branchCommit and add it to index
-                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                    // 分支修改了文件，我们也更新为分支版本
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         return;
                     } else {
@@ -525,53 +681,49 @@ public class Repository {
                 continue;
             }
 
-            // merge with conflicts, if logic can be simplified
+            // 情况：产生冲突
             if (!splitBranchConsistent && !splitCurrentConsistent && !branchCurrentConsistent) {
                 conflictFlag = true;
                 StringBuilder conflictedContents = new StringBuilder("<<<<<<< HEAD\n");
-                String currentCommitContent =  currentCommitFiles.contains(fileName) ?
-                        GetFileContent(currentCommit, fileName) : "";
-                String branchCommitContent = branchCommitFiles.contains(fileName) ?
-                        GetFileContent(branchCommit, fileName) : "";
+
+                String currentCommitContent = currentCommitFiles.contains(fileName)
+                        ? GetFileContent(currentCommit, fileName)
+                        : "";
+                String branchCommitContent = branchCommitFiles.contains(fileName)
+                        ? GetFileContent(branchCommit, fileName)
+                        : "";
+
                 conflictedContents.append(currentCommitContent);
                 conflictedContents.append("=======\n");
                 conflictedContents.append(branchCommitContent);
                 conflictedContents.append(">>>>>>>\n");
-                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+
+                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
                     System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                     return;
                 } else {
-                    FileUtils.writeCWDFile(fileName, String.valueOf(conflictedContents));
+                    FileUtils.writeCWDFile(fileName, conflictedContents.toString());
                     add(fileName);
                 }
             }
         }
 
-        // 1. make commit 2. set this new commit secondParentId
+        // ========== 创建合并提交 ==========
+
+        // 创建 merge commit（内容已添加到暂存区）
         commit("Merged " + branchName + " into " + HEAD + ".");
+
+        // 设置 merge commit 的第二父指针
         Commit mergeCommit = CommitUtils.getCommitByCommitId(getLastCommitId());
         mergeCommit.setSecondParentCommitId(BranchUtils.getBranchCommitId(branchName));
-        // bug: you have to save the merge commit. all changes must be saved
         CommitUtils.saveCommit(mergeCommit);
 
-        // 3. other things to do: you have to make the current branch --> merged commit
+        // 更新当前分支指向 merge commit
         BranchUtils.saveBranchCommit(HEAD, CommitUtils.getCommitId(mergeCommit));
 
-        // if conflicted, you should out put some message
+        // 若有冲突，提示用户
         if (conflictFlag) {
             System.out.println("Encountered a merge conflict.");
         }
     }
-
-    public static void checkoutFile(Commit commit, String fileName) {
-        if (!CommitUtils.isTrackedByCommit(fileName, commit)) {
-            System.out.println("File does not exist in that commit.");
-            return;
-        }
-        String fileSHA1 = commit.getFileVersion().get(fileName);
-        String fileContent = FileUtils.getFileContent(fileSHA1);
-        FileUtils.writeCWDFile(fileName, fileContent);
-    }
-
-
 }
