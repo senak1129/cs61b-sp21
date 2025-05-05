@@ -71,21 +71,21 @@ public class Main {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
-                Repository.MakeNewBranch(args[1]);
+                Repository.makeNewBranch(args[1]);
                 break;
             case "rm-branch":
                 if(!Repository.IsInitial()){
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
-                Repository.RemoveBranch(args[1]);
+                Repository.removeBranch(args[1]);
                 break;
             case "reset":
                 if(!Repository.IsInitial()){
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
-                Repository.Reset(args[1]);
+                Repository.reset(args[1]);
                 break;
             case "merge":
                 if(!Repository.IsInitial()){

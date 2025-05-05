@@ -145,6 +145,7 @@ public class CommitUtils {
         return fileVersion1.get(fileName).equals(fileVersion2.get(fileName));
     }
 
+    //只要commit对应的文件版本包含这个文件 则说明被跟踪 不管内容是否改变
     public static boolean isTrackedByCommit(String fileName, Commit commit){
         return commit.getFileVersion().containsKey(fileName);
     }

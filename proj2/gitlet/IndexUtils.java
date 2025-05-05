@@ -30,15 +30,21 @@ public class IndexUtils {
         Utils.writeObject(STAGED_FILE, StagedMap);
     }
 
-    //暂存区
+    //写入两张map
     public static void stagedFile(String fileName){
-        String FileContent = readContentsAsString(join(CWD,fileName));
-        String FileSha1 = sha1(FileContent);
-        IndexMap.put(fileName,FileSha1);
-        StagedMap.put(FileSha1,FileContent);
+        String fileContent = readContentsAsString(join(CWD,fileName));
+        String fileSha1 = sha1(fileContent);
+        IndexMap.put(fileName,fileSha1);
+        StagedMap.put(fileSha1,fileContent);
     }
 
-    //新添加 或者 修改
+    //ture:
+    //新文件被暂存：文件不在上一次提交中，但被 add 进了 Index
+    //修改后暂存：文件在提交中已有，但内容修改后又 add 了新版本
+    //false:
+    //文件不在 Index 中（即未 add）
+    //文件在 Index 中，但和上次提交版本相同（add 后未修改）
+    //文件不在提交和 Index 中（从未存在）
     public static boolean isStaged(String fileName, Commit commit){
         assert fileName != null && commit != null;
         HashMap<String, String> fileVersionMap = commit.getFileVersion();

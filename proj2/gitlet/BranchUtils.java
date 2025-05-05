@@ -17,7 +17,7 @@ public class BranchUtils {
     }
 
     public static boolean branchExists(String branchName) {
-        List<String> branchNameList = Repository.GetAllBranches();
+        List<String> branchNameList = Repository.getAllBranches();
         return branchNameList.contains(branchName);
     }
 
@@ -28,10 +28,6 @@ public class BranchUtils {
         }else{
             return null;
         }
-    }
-
-    public static void saveCommitId(String branchName, String commitId) {
-        Utils.writeContents(join(BRANCH_DIR, branchName), commitId);
     }
 
     public static String getBranchCommitId(String branchName){
