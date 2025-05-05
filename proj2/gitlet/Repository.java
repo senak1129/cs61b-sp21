@@ -181,20 +181,20 @@ public class Repository {
 
     public static void checkout(String...args) {
         Commit commit = null;
-        if (args.length > 1) {
+        if (args.length > 2) {
             String fileName;
-            if (args.length == 2) {
-                if (!args[0].equals("--")) {
-                    System.out.println("Incorrect operands.");
-                }
-                fileName = args[1];
-                commit = getLastCommit();
-            } else {
+            if (args.length == 3) {
                 if (!args[1].equals("--")) {
                     System.out.println("Incorrect operands.");
                 }
                 fileName = args[2];
-                commit = GetCommitByCommitIdPrefix(args[0]);
+                commit = getLastCommit();
+            } else {
+                if (!args[2].equals("--")) {
+                    System.out.println("Incorrect operands.");
+                }
+                fileName = args[3];
+                commit = GetCommitByCommitIdPrefix(args[1]);
                 if (commit == null) {
                     System.out.println("No commit with that id exists.");
                     return;
@@ -203,7 +203,7 @@ public class Repository {
             checkoutFile(commit, fileName);
         } else {
             commit = GetLastCommit();
-            checkoutBranch(commit, args[0]);
+            checkoutBranch(commit, args[1]);
         }
     }
 
