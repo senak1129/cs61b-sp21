@@ -136,15 +136,15 @@ public class Main {
                 Repository.reset(args[1]);
                 break;
             case "merge":
-                if (args.length != 2) {
+                if (args.length < 2 || args[1].trim().isEmpty()) {
                     System.out.println("Incorrect operands.");
                     return;
                 }
-                if (!Repository.IsInitial()){
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
-                Repository.merge(args[1]);
+                Repository.merge(args[1].trim());
                 break;
             default:
                 System.out.println("No command with that name exists.");
