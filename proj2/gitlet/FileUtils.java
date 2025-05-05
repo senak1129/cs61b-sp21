@@ -59,7 +59,7 @@ public class FileUtils {
     }
 
     public static String getFileContent(String fileSHA1) {
-        return readContentsAsString(join(OBJECTS_DIR,fileSHA1));
+        return readContentsAsString(join(OBJECTS_DIR, fileSHA1));
     }
 
 }

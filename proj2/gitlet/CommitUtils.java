@@ -29,7 +29,7 @@ public class CommitUtils {
     }
 
     public static String getLastCommitId() {
-        return readContentsAsString(join(BRANCH_DIR,Repository.HEAD));
+        return readContentsAsString(join(BRANCH_DIR, Repository.HEAD));
     }
 
     //在commits_dir文件夹生成commit
@@ -82,15 +82,23 @@ public class CommitUtils {
         stack.push(head1);
         while (!stack.isEmpty()) {
             Commit cur = stack.pop();
-            if (cur == null) continue;
+            if (cur == null) {
+                continue;
+            }
             String id = getCommitId(cur);       // 你的提交 ID 方法
-            if (!seen.add(id)) continue;                  // 已访问过就跳过
+            if (!seen.add(id)) {
+                continue;                  // 已访问过就跳过
+            }
 
             // 把所有父提交都压栈
             String p1 = cur.getFirstParentCommitId();
             String p2 = cur.getSecondParentCommitId();   // 可能为 null
-            if (p1 != null) stack.push(Repository.GetCommitByCommitIdPrefix(p1));
-            if (p2 != null) stack.push(Repository.GetCommitByCommitIdPrefix(p2));
+            if (p1 != null) {
+                stack.push(Repository.GetCommitByCommitIdPrefix(p1));
+            }
+            if (p2 != null) {
+                stack.push(Repository.GetCommitByCommitIdPrefix(p2));
+            }
         }
 
         // 2. 从 b2 做 BFS，首个命中的就是最近的公共祖先
@@ -109,8 +117,12 @@ public class CommitUtils {
 
             String p1 = cur.getFirstParentCommitId();
             String p2 = cur.getSecondParentCommitId();
-            if (p1 != null) queue.add(Repository.GetCommitByCommitIdPrefix(p1));
-            if (p2 != null) queue.add(Repository.GetCommitByCommitIdPrefix(p2));
+            if (p1 != null) {
+                queue.add(Repository.GetCommitByCommitIdPrefix(p1));
+            }
+            if (p2 != null) {
+                queue.add(Repository.GetCommitByCommitIdPrefix(p2));
+            }
         }
 
         throw new RuntimeException("找不到共同祖先！");
@@ -131,8 +143,12 @@ public class CommitUtils {
         HashMap<String,String>fileVersion2 = commit2.getFileVersion();
         boolean existInCommit1 = fileVersion1.containsKey(fileName);
         boolean existInCommit2 = fileVersion2.containsKey(fileName);
-        if (!existInCommit1 && !existInCommit2) return true;
-        if (!existInCommit1 || !existInCommit2) return false;
+        if (!existInCommit1 && !existInCommit2) {
+            return true;
+        }
+        if (!existInCommit1 || !existInCommit2) {
+            return false;
+        }
         Boolean sameContent = hasSameFileVersion(fileName,commit1,commit2);
         assert sameContent != null;
         return sameContent;
@@ -142,7 +158,9 @@ public class CommitUtils {
         assert fileName != null && commit1 != null && commit2 != null;
         HashMap<String,String>fileVersion1 = commit1.getFileVersion();
         HashMap<String,String>fileVersion2 = commit2.getFileVersion();
-        if(!fileVersion1.containsKey(fileName) || !fileVersion2.containsKey(fileName)) return null;
+        if(!fileVersion1.containsKey(fileName) || !fileVersion2.containsKey(fileName)) {
+            return null;
+        }
         return fileVersion1.get(fileName).equals(fileVersion2.get(fileName));
     }
 

@@ -44,7 +44,6 @@ public class Repository {
         String CommitId = getCommitId(EmptyCommit);
         BranchUtils.saveBranchCommit("master", CommitId);
         BranchUtils.setHEAD("master");
-
     }
 
     public static void add(String fileName) {
@@ -345,13 +344,13 @@ public class Repository {
         return CommitUtils.getCommitByCommitId(getLastCommitId());
     }
 
-    public static void status(){
+    public static void status() {
         System.out.println("=== Branches ===");
         List<String> BranchList = getAllBranches();
-        for(String BranchName:BranchList) {
-            if(BranchName.equals(HEAD)) {
+        for (String BranchName:BranchList) {
+            if (BranchName.equals(HEAD)) {
                 System.out.println("*"+BranchName);
-            }else{
+            } else {
                 System.out.println(BranchName);
             }
         }
@@ -427,11 +426,11 @@ public class Repository {
 
     public static void removeBranch(String branchName) {
         List<String> BranchList = getAllBranches();
-        if(!BranchList.contains(branchName)) {
+        if (!BranchList.contains(branchName)) {
             System.out.println("A branch with that name does not exist.");
             return;
         }
-        if(branchName.equals(HEAD)) {
+        if (branchName.equals(HEAD)) {
             System.out.println("Cannot remove the current branch.");
             return;
         }

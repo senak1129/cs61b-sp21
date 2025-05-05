@@ -23,16 +23,16 @@ public class BranchUtils {
 
     public static Commit getBranchCommit(String branchName) {
         File F = join(BRANCH_DIR, branchName);
-        if (F.exists()){
+        if (F.exists()) {
             return Repository.GetCommitByCommitIdPrefix(readContentsAsString(F));
-        } else{
+        } else {
             return null;
         }
     }
 
     public static String getBranchCommitId(String branchName) {
         File F = join(BRANCH_DIR, branchName);
-        if (F.exists()){
+        if (F.exists()) {
             return readContentsAsString(F);
         } else {
             return null;
