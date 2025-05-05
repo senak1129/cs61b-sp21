@@ -45,7 +45,7 @@ public class IndexUtils {
     //文件不在 Index 中（即未 add）
     //文件在 Index 中，但和上次提交版本相同（add 后未修改）
     //文件不在提交和 Index 中（从未存在）
-    public static boolean isStaged(String fileName, Commit commit){
+    public static boolean isStaged(String fileName, Commit commit) {
         assert fileName != null && commit != null;
         HashMap<String, String> fileVersionMap = commit.getFileVersion();
         return (IndexMap.containsKey(fileName) && !fileVersionMap.containsKey(fileName))
@@ -53,7 +53,7 @@ public class IndexUtils {
                 && !fileVersionMap.get(fileName).equals(IndexMap.get(fileName)));
     }
 
-    public static void unStageFile(String fileName){
+    public static void unStageFile(String fileName) {
         String FileSha1 = IndexMap.get(fileName);
         StagedMap.remove(FileSha1);
         IndexMap.remove(fileName);

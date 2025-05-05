@@ -17,47 +17,47 @@ public class Commit implements Serializable {
     private HashMap<String,String> fileVersion;
 
 
-    public Commit(){
+    public Commit() {
         fileVersion = new HashMap<>();
     }
 
-    public void setMessage(String message){
+    public void setMessage(String message) {
         this.message = message;
     }
 
-    public void setDate(Date date){
+    public void setDate(Date date) {
         this.date = date;
     }
 
-    public void setFirstParentCommitId(String firstParentCommitId){
+    public void setFirstParentCommitId(String firstParentCommitId) {
         this.firstParentCommitId = firstParentCommitId;
     }
 
-    public void setSecondParentCommitId(String secondParentCommitId){
+    public void setSecondParentCommitId(String secondParentCommitId) {
         this.secondParentCommitId = secondParentCommitId;
     }
 
-    public void setFileVersion(HashMap<String,String> fileVersion){
+    public void setFileVersion(HashMap<String,String> fileVersion) {
         this.fileVersion = fileVersion;
     }
 
-    public String getMessage(){
+    public String getMessage() {
         return this.message;
     }
 
-    public Date getDate(){
+    public Date getDate() {
         return this.date;
     }
 
-    public String getFirstParentCommitId(){
+    public String getFirstParentCommitId() {
         return this.firstParentCommitId;
     }
 
-    public String getSecondParentCommitId(){
+    public String getSecondParentCommitId() {
         return this.secondParentCommitId;
     }
 
-    public HashMap<String,String> getFileVersion(){
+    public HashMap<String,String> getFileVersion() {
         return this.fileVersion;
     }
 }

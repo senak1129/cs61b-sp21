@@ -8,87 +8,139 @@ public class Main {
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
+                if (args.length != 1) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
                 Repository.init();
                 break;
             case "add":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.add(args[1]);
                 break;
             case "commit":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.commit(args[1]);
                 break;
             case "rm":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.rm(args[1]);
                 break;
             case "log":
-                if(!Repository.IsInitial()){
+                if (args.length != 1) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.log();
                 break;
             case "global-log":
-                if(!Repository.IsInitial()){
+                if (args.length != 1) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.globalLog();
                 break;
             case "find":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.find(args[1]);
                 break;
             case "status":
-                if(!Repository.IsInitial()){
+                if (args.length != 1) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()){
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.status();
                 break;
             case "checkout":
-                if(!Repository.IsInitial()){
+                if (args.length < 2 || args.length > 4) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.checkout(args);
                 break;
             case "branch":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.makeNewBranch(args[1]);
                 break;
             case "rm-branch":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()){
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.removeBranch(args[1]);
                 break;
             case "reset":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()) {
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }
                 Repository.reset(args[1]);
                 break;
             case "merge":
-                if(!Repository.IsInitial()){
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+                if (!Repository.IsInitial()){
                     System.out.println("Not in an initialized Gitlet directory.");
                     return;
                 }

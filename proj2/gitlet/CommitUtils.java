@@ -9,7 +9,7 @@ import static gitlet.Utils.serialize;
 
 public class CommitUtils {
 
-    public static Commit makeEmptyCommit(String message){
+    public static Commit makeEmptyCommit(String message) {
         Commit c = new Commit();
         c.setMessage(message);
         c.setDate(new Date(0));
@@ -18,7 +18,7 @@ public class CommitUtils {
         return c;
     }
 
-    public static Commit makeCommit(String message){
+    public static Commit makeCommit(String message) {
         Commit c = new Commit();
         c.setMessage(message);
         c.setDate(new Date(0));
@@ -28,27 +28,27 @@ public class CommitUtils {
         return c;
     }
 
-    public static String getLastCommitId(){
+    public static String getLastCommitId() {
         return readContentsAsString(join(BRANCH_DIR,Repository.HEAD));
     }
 
     //在commits_dir文件夹生成commit
-    public static void saveCommit(Commit commit){
+    public static void saveCommit(Commit commit) {
         String commitId = getCommitId(commit);
         File commitFile = join(COMMITS_DIR, commitId);
         writeObject(commitFile, commit);
     }
 
     //在objects_dir文件夹生成
-    public static void createFileObject(Commit LastCommit, Commit NowCommit){
+    public static void createFileObject(Commit LastCommit, Commit NowCommit) {
         HashMap<String,String>LastFileVersion = LastCommit.getFileVersion();
         HashMap<String,String>NowFileVersion = NowCommit.getFileVersion();
-        for(String FileName : NowFileVersion.keySet()){
-            if(!LastFileVersion.containsKey(FileName)){
+        for (String FileName : NowFileVersion.keySet()) {
+            if (!LastFileVersion.containsKey(FileName)) {
                 String FileSha1 = NowFileVersion.get(FileName);
                 String FileSha1Content = IndexUtils.StagedMap.get(FileSha1);
                 writeContents(join(OBJECTS_DIR,FileSha1), FileSha1Content);
-            }else if(!LastFileVersion.get(FileName).equals(NowFileVersion.get(FileName))){
+            } else if (!LastFileVersion.get(FileName).equals(NowFileVersion.get(FileName))) {
                 String LastFileSha1 = LastFileVersion.get(FileName);
                 String NowFileSha1 = NowFileVersion.get(FileName);
                 String FileSha1Content = IndexUtils.StagedMap.get(NowFileSha1);
@@ -68,7 +68,8 @@ public class CommitUtils {
         try {
             return readObject(commitFile, Commit.class);
         } catch (IllegalArgumentException e) {
-            return null;}
+            return null;
+        }
     }
 
     public static Commit findSplitPoint(String b1, String b2) {
@@ -120,24 +121,24 @@ public class CommitUtils {
         return getCommitId(commit1).equals(getCommitId(commit2));
     }
 
-    public static String getCommitId(Commit commit){
+    public static String getCommitId(Commit commit) {
         return sha1(serialize(commit));
     }
 
-    public static boolean isConsistent(String fileName,Commit commit1,Commit commit2){
+    public static boolean isConsistent(String fileName,Commit commit1,Commit commit2) {
         assert fileName != null && commit1 != null && commit2 != null;
         HashMap<String,String>fileVersion1 = commit1.getFileVersion();
         HashMap<String,String>fileVersion2 = commit2.getFileVersion();
         boolean existInCommit1 = fileVersion1.containsKey(fileName);
         boolean existInCommit2 = fileVersion2.containsKey(fileName);
-        if(!existInCommit1 && !existInCommit2) return true;
-        if(!existInCommit1 || !existInCommit2) return false;
+        if (!existInCommit1 && !existInCommit2) return true;
+        if (!existInCommit1 || !existInCommit2) return false;
         Boolean sameContent = hasSameFileVersion(fileName,commit1,commit2);
         assert sameContent != null;
         return sameContent;
     }
 
-    public static Boolean hasSameFileVersion(String fileName,Commit commit1,Commit commit2){
+    public static Boolean hasSameFileVersion(String fileName,Commit commit1,Commit commit2) {
         assert fileName != null && commit1 != null && commit2 != null;
         HashMap<String,String>fileVersion1 = commit1.getFileVersion();
         HashMap<String,String>fileVersion2 = commit2.getFileVersion();
@@ -146,11 +147,11 @@ public class CommitUtils {
     }
 
     //只要commit对应的文件版本包含这个文件 则说明被跟踪 不管内容是否改变
-    public static boolean isTrackedByCommit(String fileName, Commit commit){
+    public static boolean isTrackedByCommit(String fileName, Commit commit) {
         return commit.getFileVersion().containsKey(fileName);
     }
 
-    public static Commit getLastCommit(){
+    public static Commit getLastCommit() {
         String lastCommitId = getLastCommitId();
         if(lastCommitId == null) return null;
         return getCommitByCommitId(lastCommitId);

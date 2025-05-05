@@ -273,7 +273,7 @@ public class Repository {
 
 
     public static void ckout(Commit commit, String fileName) {
-        if(!isTrackedByCommit(fileName, commit)) {
+        if (!isTrackedByCommit(fileName, commit)) {
             System.out.println("File does not exist in that commit.");
             return;
         }

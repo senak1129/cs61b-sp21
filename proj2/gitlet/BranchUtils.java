@@ -11,7 +11,7 @@ public class BranchUtils {
         writeContents(join(BRANCH_DIR, branchName), commitId);
     }
 
-    public static void setHEAD(String branchName){
+    public static void setHEAD(String branchName) {
         Repository.HEAD = branchName;
         writeContents(HEAD_FILE, branchName);
     }
@@ -21,20 +21,20 @@ public class BranchUtils {
         return branchNameList.contains(branchName);
     }
 
-    public static Commit getBranchCommit(String branchName){
+    public static Commit getBranchCommit(String branchName) {
         File F = join(BRANCH_DIR, branchName);
-        if(F.exists()){
+        if (F.exists()){
             return Repository.GetCommitByCommitIdPrefix(readContentsAsString(F));
-        }else{
+        } else{
             return null;
         }
     }
 
-    public static String getBranchCommitId(String branchName){
+    public static String getBranchCommitId(String branchName) {
         File F = join(BRANCH_DIR, branchName);
-        if(F.exists()){
+        if (F.exists()){
             return readContentsAsString(F);
-        }else{
+        } else {
             return null;
         }
     }
