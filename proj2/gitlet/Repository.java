@@ -469,7 +469,10 @@ public class Repository {
         }
         if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
             String savedHEAD = HEAD;
-            checkout(branchName); // checkout branch, note it will change head --> another branch
+            String []ns = new String[2];
+            ns[0] = "checkout";
+            ns[1] = branchName;
+            checkout(ns); // checkout branch, note it will change head --> another branch
             HEAD = savedHEAD;
             // fast-forward master pointers
             BranchUtils.saveBranchCommit(HEAD, BranchUtils.getBranchCommitId(branchName));
