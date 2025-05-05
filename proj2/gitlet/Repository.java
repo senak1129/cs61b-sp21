@@ -179,95 +179,57 @@ public class Repository {
         return readContentsAsString(join(OBJECTS_DIR, FileSha1));
     }
 
-    /**
-     * checkout 命令实现：
-     * 1. checkout -- [filename]              → 将当前分支最新提交中的某文件恢复到工作目录
-     * 2. checkout [commitId] -- [filename]   → 将指定提交中的某文件恢复到工作目录
-     * 3. checkout [branchName]               → 切换分支并恢复工作区文件
-     */
-    public static void checkout(String... args) {
-        // ----------------------------
-        // 情况 1：checkout -- [filename]
-        // ----------------------------
-        if (args.length == 3 && args[1].equals("--")) {
-            String FileName = args[2];
-            Commit LastCommit = getCommitByCommitId(getLastCommitId());
-
-            // 如果该文件不在上次提交中，报错
-            if (!LastCommit.getFileVersion().containsKey(FileName)) {
-                System.out.println("File does not exist in that commit.");
-                return;
-            }
-
-            // 恢复文件内容到当前工作目录
-            String content = GetFileContent(LastCommit, FileName);
-            Utils.writeContents(join(CWD, FileName), content);
-
-            // ----------------------------
-            // 情况 2：checkout [commitId] -- [filename]
-            // ----------------------------
-        } else if (args.length == 4 && args[2].equals("--")) {
-            String CommitId = args[1];
-            String FileName = args[3];
-
-            // 根据前缀查找对应的提交
-            Commit commit = GetCommitByCommitIdPrefix(CommitId);
-
-            if (commit == null) {
-                System.out.println("No commit with that id exists.");
-                return;
-            }
-
-            if (!commit.getFileVersion().containsKey(FileName)) {
-                System.out.println("File does not exist in that commit.");
-                return;
-            }
-
-            // 恢复指定文件内容到当前工作目录
-            String content = GetFileContent(commit, FileName);
-            Utils.writeContents(join(CWD, FileName), content);
-
-            // ----------------------------
-            // 情况 3：checkout [branchName]
-            // ----------------------------
-        } else if (args.length == 2) {
-            String BranchName = args[1];
-
-            // 已在该分支上，报错
-            if (BranchName.equals(HEAD)) {
-                System.out.println("No need to checkout the current branch.");
-                return;
-            }
-
-            List<String> BranchList = getAllBranches();
-
-            // 分支不存在，报错
-            if (!BranchList.contains(BranchName)) {
-                System.out.println("No such branch exists.");
-                return;
-            } else {
-                List<String> CWDFileNames = plainFilenamesIn(CWD);
-                assert CWDFileNames != null;
-
-                // 遍历当前目录，是否有未被跟踪的文件，防止覆盖用户数据
-                for (String FileName : CWDFileNames) {
-                    if (!CommitUtils.isTrackedByCommit(FileName, GetLastCommit())) {
-                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                        return;
-                    }
+    public static void checkout(String...args) {
+        Commit commit = null;
+        if (args.length > 1) {
+            String fileName;
+            if (args.length == 2) {
+                if (!args[0].equals("--")) {
+                    System.out.println("Incorrect operands.");
                 }
-
-                // 切换分支：恢复该分支的最新提交状态，并更新 HEAD
-                restoreCommit(GetBranchLastCommit(BranchName));
-                BranchUtils.setHEAD(BranchName);
+                fileName = args[1];
+                commit = getLastCommit();
+            } else {
+                if (!args[1].equals("--")) {
+                    System.out.println("Incorrect operands.");
+                }
+                fileName = args[2];
+                commit = GetCommitByCommitIdPrefix(args[0]);
+                if (commit == null) {
+                    System.out.println("No commit with that id exists.");
+                    return;
+                }
             }
-
-            // ----------------------------
-            // 参数格式不正确
-            // ----------------------------
+            checkoutFile(commit, fileName);
         } else {
-            System.out.println("Incorrect operands.");
+            commit = GetLastCommit();
+            checkoutBranch(commit, args[0]);
         }
+    }
+
+    public static void checkoutBranch(Commit commit, String branchName) {
+        if (!BranchUtils.branchExists(branchName)) { // branchExists() will assert branchName != null
+            System.out.println("No such branch exists.");
+            return;
+        }
+        if (branchName.equals(HEAD)) {
+            System.out.println("No need to checkout the current branch.");
+            return;
+        }
+        List<String> CWDFileNames = plainFilenamesIn(CWD);
+        assert CWDFileNames != null;
+        for (String fileName : CWDFileNames) {
+            if (!CommitUtils.isTrackedByCommit(fileName, commit)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
+            }
+        }
+        // restore commit to CWD
+        Commit newBranchCommit = CommitUtils.getCommitByCommitId(BranchUtils.getBranchCommitId(branchName));
+        restoreCommit(newBranchCommit);
+
+        // 3. set HEAD == new branch name
+        BranchUtils.setHEAD(branchName);
     }
 
 
