@@ -3,6 +3,7 @@ package gitlet;
 import java.util.List;
 
 import static gitlet.GitletContents.CWD;
+import static gitlet.GitletContents.OBJECTS_DIR;
 import static gitlet.Utils.*;
 
 public class FileUtils {
@@ -51,6 +52,14 @@ public class FileUtils {
         // - 但它现在存在于工作目录中 ⇒ 表示这个文件是“用户本地新增的未追踪文件”
         return !CommitUtils.isTrackedByCommit(fileName, currentCommit)
                 && CWDFileNames.contains(fileName);
+    }
+
+    public static void writeCWDFile(String fileName, String content) {
+        writeContents(join(CWD, fileName), content);
+    }
+
+    public static String getFileContent(String fileSHA1) {
+        return readContentsAsString(join(OBJECTS_DIR,fileSHA1));
     }
 
 }

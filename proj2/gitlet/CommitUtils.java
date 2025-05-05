@@ -149,4 +149,11 @@ public class CommitUtils {
     public static boolean isTrackedByCommit(String fileName, Commit commit){
         return commit.getFileVersion().containsKey(fileName);
     }
+
+    public static Commit getLastCommit(){
+        String lastCommitId = getLastCommitId();
+        if(lastCommitId == null) return null;
+        return getCommitByCommitId(lastCommitId);
+    }
+
 }

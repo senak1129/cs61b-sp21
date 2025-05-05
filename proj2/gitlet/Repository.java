@@ -480,94 +480,133 @@ public class Repository {
 
 
     public static void merge(String branchName) {
-        if(!BranchUtils.branchExists(branchName)) {
+        // pre check fail cases
+        if (!BranchUtils.branchExists(branchName)) {
             System.out.println("A branch with that name does not exist.");
             return;
         }
-
-        if(HEAD.equals(branchName)) {
-            System.out.println("Cannot merge the current branch.");
+        if (HEAD.equals(branchName)) {
+            System.out.println("Cannot merge a branch with itself.");
             return;
         }
-
-        Commit lastCommit = GetLastCommit();
-        List<String> stagedFileNames = getStagedFiles(lastCommit);
-        List<String> removedFileNames = getRemovedFiles(lastCommit);
+        Commit currentCommit = CommitUtils.getLastCommit();
+        List<String> stagedFileNames = getStagedFiles(currentCommit);
+        List<String> removedFileNames = getRemovedFiles(currentCommit);
         if (!stagedFileNames.isEmpty() || !removedFileNames.isEmpty()) {
             System.out.println("You have uncommitted changes.");
             return;
         }
-
+        // get current-branch commit, target-branch commit & split point commit
         Commit branchCommit = BranchUtils.getBranchCommit(branchName);
-        Commit splitCommit = CommitUtils.findSplitPoint(HEAD, branchName);
-        if (splitCommit == null || CommitUtils.isSameCommit(branchCommit, splitCommit)) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            return; //给定分支已经完全被包含在当前分支里
-        }
+        // Commit splitPoint = CommitUtils.getSplitCommit(HEAD, branchName);
+        Commit splitPoint = CommitUtils.findSplitPoint(HEAD, branchName);
 
-        //           master     other
-        //commit1 <- commit2 <- commit3
-        //此时让master文件等于commit3的id checkout commit3即可
-        if (CommitUtils.isSameCommit(lastCommit, splitCommit)) {
+        // the cases in which the current branch and target branch in the same line
+        if (splitPoint == null || CommitUtils.isSameCommit(branchCommit, splitPoint)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return; // in this case, head & branch points to the same commit, no need to merge
+        }
+        if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
             String savedHEAD = HEAD;
-            checkout(branchName);
+            checkout(branchName); // checkout branch, note it will change head --> another branch
             HEAD = savedHEAD;
-            // fast-forward master pointer
-            BranchUtils.saveBranchCommit(HEAD,BranchUtils.getBranchCommitId(branchName));
+            // fast-forward master pointers
+            BranchUtils.saveBranchCommit(HEAD, BranchUtils.getBranchCommitId(branchName));
             System.out.println("Current branch fast-forwarded.");
             return;
         }
-        Set<String> splitPointFiles = splitCommit.getFileVersion().keySet();
-        Set<String> lastCommitFiles = lastCommit.getFileVersion().keySet();
+
+        // Complex situation: merge with no conflict or merge with conflict
+        Set<String> splitPointFiles = splitPoint.getFileVersion().keySet();
+        Set<String> currentCommitFiles = currentCommit.getFileVersion().keySet();
         Set<String> branchCommitFiles = branchCommit.getFileVersion().keySet();
+        // union the upper three set to get all relevant files in three commits
+        // bug: you have to allocate new memory, not reference
+        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles); // there is other usage with variable splitPointFiles
+        allRelevantFiles.addAll(currentCommitFiles);
+        allRelevantFiles.addAll(branchCommitFiles);
 
-        Set<String>allFiles = new HashSet<>();
-        allFiles.addAll(splitPointFiles);
-        allFiles.addAll(lastCommitFiles);
-        allFiles.addAll(branchCommitFiles);
+        boolean conflictFlag = false;
 
-        boolean isConflict = false;
-        for(String fileName : allFiles) {
-            boolean splitCurrentConsistent = isConsistent(fileName,splitCommit,lastCommit);
-            boolean splitBranchConsistent = isConsistent(fileName,splitCommit,branchCommit);
-            boolean branchCurrentConsistent = isConsistent(fileName,lastCommit,branchCommit);
-
-            //merge no conflicts
-            if((splitBranchConsistent && ! splitCurrentConsistent) || branchCurrentConsistent) {
+        for (String fileName : allRelevantFiles) {
+            boolean splitCurrentConsistent = CommitUtils.isConsistent(fileName, splitPoint, currentCommit);
+            boolean splitBranchConsistent = CommitUtils.isConsistent(fileName, splitPoint, branchCommit);
+            boolean branchCurrentConsistent = CommitUtils.isConsistent(fileName, currentCommit, branchCommit);
+            // merge no conflicts
+            if ((splitBranchConsistent && !splitCurrentConsistent) || branchCurrentConsistent) {
                 continue;
             }
 
-            if(!splitBranchConsistent && splitCurrentConsistent) {
-                if(!branchCommitFiles.contains(fileName)) {
-                    if(FileUtils.isOverwritingOrDeletingCWDUntracked(fileName,lastCommit)){
+            if (!splitBranchConsistent && splitCurrentConsistent) {
+                if (!branchCommitFiles.contains(fileName)) {
+                    // in this case, other two commit must contain the file
+                    // remove the file from CWD & not tracked this file in merged commit
+                    // which means drop indexMap's record with this fileName
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
                         System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         return;
-                    }else{
+                    } else {
                         rm(fileName);
                     }
-                }else{
-                    if(FileUtils.isOverwritingOrDeletingCWDUntracked(fileName,lastCommit)){
-                        System.out.println("There is an untracked file in the way; delete it first.");
+                } else {
+                    // in this case, we will checkout the file in branchCommit and add it to index
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                         return;
-                    }else{
-                        ckout(branchCommit,fileName);
+                    } else {
+                        checkoutFile(branchCommit, fileName);
                         add(fileName);
                     }
                 }
                 continue;
             }
+
+            // merge with conflicts, if logic can be simplified
+            if (!splitBranchConsistent && !splitCurrentConsistent && !branchCurrentConsistent) {
+                conflictFlag = true;
+                StringBuilder conflictedContents = new StringBuilder("<<<<<<< HEAD\n");
+                String currentCommitContent =  currentCommitFiles.contains(fileName) ?
+                        GetFileContent(currentCommit, fileName) : "";
+                String branchCommitContent = branchCommitFiles.contains(fileName) ?
+                        GetFileContent(branchCommit, fileName) : "";
+                conflictedContents.append(currentCommitContent);
+                conflictedContents.append("=======\n");
+                conflictedContents.append(branchCommitContent);
+                conflictedContents.append(">>>>>>>\n");
+                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                    return;
+                } else {
+                    FileUtils.writeCWDFile(fileName, String.valueOf(conflictedContents));
+                    add(fileName);
+                }
+            }
         }
 
-        commit("Merged " + branchName + "into " + HEAD + ".");
-        Commit mergeCommit = GetLastCommit();
+        // 1. make commit 2. set this new commit secondParentId
+        commit("Merged " + branchName + " into " + HEAD + ".");
+        Commit mergeCommit = CommitUtils.getCommitByCommitId(getLastCommitId());
         mergeCommit.setSecondParentCommitId(BranchUtils.getBranchCommitId(branchName));
-        saveCommit(mergeCommit);
+        // bug: you have to save the merge commit. all changes must be saved
+        CommitUtils.saveCommit(mergeCommit);
 
-        BranchUtils.saveBranchCommit(HEAD, getCommitId(mergeCommit));
-        if(isConflict) {
+        // 3. other things to do: you have to make the current branch --> merged commit
+        BranchUtils.saveBranchCommit(HEAD, CommitUtils.getCommitId(mergeCommit));
+
+        // if conflicted, you should out put some message
+        if (conflictFlag) {
             System.out.println("Encountered a merge conflict.");
         }
+    }
 
+    public static void checkoutFile(Commit commit, String fileName) {
+        if (!CommitUtils.isTrackedByCommit(fileName, commit)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        String fileSHA1 = commit.getFileVersion().get(fileName);
+        String fileContent = FileUtils.getFileContent(fileSHA1);
+        FileUtils.writeCWDFile(fileName, fileContent);
     }
 
 
