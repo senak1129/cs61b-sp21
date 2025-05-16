@@ -130,7 +130,6 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
             inorderTraversal(root.right);
         }
 
-
         @Override
         public boolean hasNext() {
             return ! stack.empty();
@@ -141,8 +140,8 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
             return stack.pop().key;
         }
 
-
     }
+
     public void printsInOrder(){
         Stack<V> res = new Stack<V>();
         Iterator<K> it = this.iterator();
