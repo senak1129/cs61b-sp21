@@ -6,8 +6,6 @@ import java.util.Set;
 import java.util.Stack;
 
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
-    private static final Object NOT_FOUND = new Object();
-
 
     private Node root = null;
     private int size = 0;
@@ -26,7 +24,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
 
     private V get(Node x, K key) {
         if (key == null) throw new IllegalArgumentException("calls get() with a null key");
-        if (x == null) return (V) NOT_FOUND;
+        if (x == null) return null;
         int cmp = key.compareTo(x.key);
         if      (cmp < 0) return get(x.left, key);
         else if (cmp > 0) return get(x.right, key);
@@ -73,8 +71,17 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     }
 
     @Override
-    public boolean containsKey(K key){
-        return get(root, key) != NOT_FOUND;
+    public boolean containsKey(K key) {
+        return containsKeyHelper(root, key);
+    }
+
+    private boolean containsKeyHelper(Node x, K key) {
+        if (key == null) throw new IllegalArgumentException("calls containsKey() with a null key");
+        if (x == null) return false;
+        int cmp = key.compareTo(x.key);
+        if      (cmp < 0) return containsKeyHelper(x.left, key);
+        else if (cmp > 0) return containsKeyHelper(x.right, key);
+        else              return true;
     }
 
     @Override
@@ -100,12 +107,50 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
 
     @Override
     public V remove(K key){
-        throw new UnsupportedOperationException();
+        Node cur = root;
+        boolean found = false;
+        if (root.key.equals(key)) {
+            found = true;
+            root = null;
+        }
+        else {
+            while (cur != null) {
+                int cmp = key.compareTo(cur.key);
+                if (cmp < 0) {
+                    cur = cur.left;
+                }
+                else if (cmp > 0) {
+                    cur = cur.right;
+                } else {
+                    found = true;
+                    break;
+                }
+            }
+        }
+       if (!found) return null;
+       Set<Node>set = new HashSet<Node>();
+       getSet(cur.left,set);
+       getSet(cur.right,set);
+       size-=set.size()+1;
+       for (Node x : set) {
+           put(x.key, x.val);
+       }
+       return cur.val;
     }
+
+    public void getSet(Node root,Set<Node>set){
+        if (root == null) return;
+        set.add(root);
+        getSet(root.left, set);
+        getSet(root.right, set);
+    }
+
+
 
     @Override
     public V remove(K key, V value){
-        throw new UnsupportedOperationException();
+        remove(key);
+        return value;
     }
 
     @Override
