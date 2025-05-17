@@ -108,39 +108,47 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     }
 
     @Override
-    public V remove(K key){
-        Node cur = root;
-        boolean found = false;
-        if (root.key.equals(key)) {
-            found = true;
-            root = null;
+    public V remove(K key) {
+        if (key == null) throw new IllegalArgumentException("argument to remove() is null");
+        V removedVal = get(key);
+        if (removedVal != null) {
+            root = remove(root, key);
+            size--;
         }
-        else {
-            while (cur != null) {
-                int cmp = key.compareTo(cur.key);
-                if (cmp < 0) {
-                    cur = cur.left;
-                }
-                else if (cmp > 0) {
-                    cur = cur.right;
-                } else {
-                    found = true;
-                    break;
-                }
-            }
-        }
-       if (!found) return null;
-       Set<Node>set = new HashSet<Node>();
-       getSet(cur.left,set);
-       getSet(cur.right,set);
-       size-=set.size()+1;
-       for (Node x : set) {
-           put(x.key, x.val);
-       }
-       return cur.val;
+        return removedVal;
     }
 
-    public void getSet(Node root,Set<Node>set){
+    private Node remove(Node x, K key) {
+        if (x == null) return null;
+        int cmp = key.compareTo(x.key);
+        if (cmp < 0) {
+            x.left = remove(x.left, key);
+        } else if (cmp > 0) {
+            x.right = remove(x.right, key);
+        } else {
+            if (x.left == null) return x.right;
+            if (x.right == null) return x.left;
+
+            Node t = x;
+            x = min(t.right);
+            x.right = deleteMin(t.right);
+            x.left = t.left;
+        }
+        return x;
+    }
+
+    private Node min(Node x) {
+        if (x.left == null) return x;
+        else return min(x.left);
+    }
+
+    private Node deleteMin(Node x) {
+        if (x.left == null) return x.right;
+        x.left = deleteMin(x.left);
+        return x;
+    }
+
+    private void getSet(Node root,Set<Node>set){
         if (root == null) return;
         set.add(root);
         getSet(root.left, set);
@@ -189,7 +197,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
 
     }
 
-    public void printsInOrder(){
+    public void printInOrder(){
         Stack<V> res = new Stack<V>();
         Iterator<K> it = this.iterator();
         while (it.hasNext()) {
