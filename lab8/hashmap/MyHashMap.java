@@ -1,6 +1,7 @@
 package hashmap;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -13,53 +14,125 @@ import java.util.Set;
  */
 public class MyHashMap<K, V> implements Map61B<K, V> {
 
+    public int hashing(K key) {
+        int hashCode = key.hashCode();
+        return (hashCode & 0x7fffffff) & (this.buckets.length - 1);
+    }
+
     @Override
     public void clear() {
-        buckets = null;
-        for (int i = 0 ; i < size() ; i++) {
+        for (int i = 0 ; i < buckets.length ; i++) {
             buckets[i].clear();
         }
         buckets = null;
+        itemsCount = 0;
+        keySet.clear();
     }
 
     @Override
     public boolean containsKey(K key) {
-        return false;
+        return keySet().contains(key);
     }
 
     @Override
     public V get(K key) {
+        if (!containsKey(key)) {
+            return null;
+        }
+        int index = hashing(key);
+        for (Node node : buckets[index]) {
+            if (node.key.equals(key)) {
+                return node.value;
+            }
+        }
         return null;
     }
 
     @Override
     public int size() {
-        return buckets.length;
+        return keySet.size();
     }
 
     @Override
     public void put(K key, V value) {
-
+        int index = hashing(key);
+        if (containsKey(key)) {
+            for (Node node : buckets[index]) {
+                if (node.key.equals(key)) {
+                    node.value = value;
+                    return;
+                }
+            }
+        } else {
+            double load = (double) (itemsCount + 1) / buckets.length;
+            if (load > loadFactor) {
+                Expand();
+            }
+            index = hashing(key);
+            buckets[index].add(createNode(key, value));
+            keySet.add(key);
+            itemsCount++;
+        }
     }
 
     @Override
     public Set<K> keySet() {
-        return Set.of();
+        return this.keySet;
     }
 
     @Override
     public V remove(K key) {
+        if (!containsKey(key)) {
+            return null;
+        }
+        int index = hashing(key);
+        Iterator<Node> iter = buckets[index].iterator();
+        while (iter.hasNext()) {
+            Node node = iter.next();
+            if (node.key.equals(key)) {
+                iter.remove();
+                keySet.remove(key);
+                itemsCount--;
+                return node.value;
+            }
+        }
         return null;
     }
 
     @Override
     public V remove(K key, V value) {
+        if (!containsKey(key)) {
+            return null;
+        }
+        int index = hashing(key);
+        Iterator<Node> iter = buckets[index].iterator();
+        while (iter.hasNext()) {
+            Node node = iter.next();
+            if (node.key.equals(key) && node.value.equals(value)) {
+                iter.remove();
+                keySet.remove(key);
+                itemsCount--;
+                return node.value;
+            }
+        }
         return null;
     }
 
     @Override
     public Iterator<K> iterator() {
-        return null;
+        return keySet.iterator();
+    }
+
+    public void Expand(){
+        int newSize = buckets.length * 2;
+        Collection<Node>[] newBuckets = createTable(newSize);
+        for (int i = 0; i < size(); i++) {
+            for (Node node : buckets[i]) {
+                int index = hashing(node.key) ;
+                newBuckets[index].add(node);
+            }
+        }
+        buckets = newBuckets;
     }
 
     /**
@@ -80,6 +153,8 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private Collection<Node>[] buckets;
     private int basicSize = 16;
     private double loadFactor = 0.75;
+    private int itemsCount = 0;
+    private Set<K> keySet = new HashSet<>();
     // You should probably define some more!
 
     /** Constructors */
