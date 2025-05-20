@@ -14,7 +14,7 @@ import java.util.Set;
  */
 public class MyHashMap<K, V> implements Map61B<K, V> {
 
-    public int hashing(K key) {
+    private int hashing(K key) {
         int hashCode = key.hashCode();
         return (hashCode & 0x7fffffff) & (this.buckets.length - 1);
     }
@@ -123,7 +123,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         return keySet.iterator();
     }
 
-    public void Expand(){
+    private void Expand(){
         int newSize = buckets.length * 2;
         Collection<Node>[] newBuckets = createTable(newSize);
         for (int i = 0; i < size(); i++) {
