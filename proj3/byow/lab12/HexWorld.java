@@ -17,6 +17,9 @@ public class HexWorld {
             return;
         }
         int cnt=0;
+        if(x<s||y<s*2){
+            return;
+        }
         for (int i = x; i <= x + s - 1; i++) {
             for (int j = y - cnt; j < y - cnt + (cnt * 2 + s); j++) {
                 world[i][j] = tile;
