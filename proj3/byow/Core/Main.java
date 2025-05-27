@@ -17,7 +17,7 @@ public class Main {
         } else if (args.length == 2 && args[0].equals("-p")) { System.out.println("Coming soon."); } 
         // DO NOT CHANGE THESE LINES YET ;)
         else {
-            System.out.println("hello");
+            System.out.println("费诗婕最可爱!");
             Engine engine = new Engine();
             engine.interactWithKeyboard();
         }
