@@ -12,10 +12,8 @@ import java.util.Random;
 public class RandomWorldDemo {
     private static final int WIDTH = 50;
     private static final int HEIGHT = 50;
-
     private static final long SEED = 2873123;
     private static final Random RANDOM = new Random(SEED);
-
     /**
      * Fills the given 2D array of tiles with RANDOM tiles.
      * @param tiles

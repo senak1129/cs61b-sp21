@@ -12,12 +12,16 @@ import java.util.Random;
  * Draws a world consisting of hexagonal regions.
  */
 public class HexWorld {
-//    private static final long SEED = 2873123;
-//    private static final Random RANDOM = new Random(SEED);
+    private static final long SEED = 287312;
+    private static final Random RANDOM = new Random(SEED);
+    private static  int width = 60;
+    private static  int height = 30;
+//    public HexWorld(int _width, int _height) {
+//        width=_width;
+//        height=_height;
+//    }
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        int width=60;
-        int height=30;
         TERenderer testw = new TERenderer();
         testw.initialize(width, height);
         TETile[][] test=new TETile[width][height];
@@ -29,18 +33,18 @@ public class HexWorld {
         int x = sc.nextInt();
         int y = sc.nextInt();
         int s = sc.nextInt();
-        addHexagon(test,x,y,s,Tileset.WALL);
+        addHexagon(test,x,y,s,randomTile());
         testw.renderFrame(test);
     }
-//    private static TETile randomTile() {
-//        int tileNum = RANDOM.nextInt(3);
-//        switch (tileNum) {
-//            case 0: return Tileset.WALL;
-//            case 1: return Tileset.FLOWER;
-//            case 2: return Tileset.NOTHING;
-//            default: return Tileset.NOTHING;
-//        }
-//    }
+    private static TETile randomTile() {
+        int tileNum = RANDOM.nextInt(3);
+        switch (tileNum) {
+            case 0: return Tileset.WALL;
+            case 1: return Tileset.FLOWER;
+            case 2: return Tileset.NOTHING;
+            default: return Tileset.NOTHING;
+        }
+    }
     public static void addHexagon(TETile[][] world, int x, int y, int s, TETile tile){
         if (x <= 1) {
             return;
