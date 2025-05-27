@@ -12,7 +12,7 @@ public class Main {
     /** Number of squares on the side of a board. */
     static final int BOARD_SIZE = 5;
     /** Probability of choosing 2 as random tile (as opposed to 4). */
-    static final double TILE2_PROBABILITY = 0.0;
+    static final double TILE2_PROBABILITY = 0.2;
 
     /** The main program.  ARGS may contain the options --seed=NUM,
      *  (random seed); --log (record moves and random tiles
